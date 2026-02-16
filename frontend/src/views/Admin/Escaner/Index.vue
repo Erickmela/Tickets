@@ -1,10 +1,10 @@
 <template>
     <div
-        class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 flex flex-col items-center justify-center">
+        class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-4 flex flex-col items-center justify-center">
         <!-- Header -->
         <div class="max-w-4xl w-full mb-6">
             <div
-                class="bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-5 border border-white/20 shadow-2xl">
+                class="bg-white rounded-3xl p-5 border border-gray-200 shadow-lg">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
                         <div class="relative">
@@ -15,8 +15,8 @@
                             </div>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold text-white">Escáner de Tickets</h1>
-                            <p class="text-sm text-gray-300 flex items-center gap-2 mt-1">
+                            <h1 class="text-2xl font-bold text-gray-900">Escáner de Tickets</h1>
+                            <p class="text-sm text-gray-600 flex items-center gap-2 mt-1">
                                 <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                                 Validación en tiempo real
                             </p>
@@ -35,7 +35,7 @@
             <!-- Estado: Inactivo -->
             <div v-if="estadoEscaner === 'inactivo'" class="text-center">
                 <div
-                    class="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-md rounded-3xl p-12 border border-white/20 shadow-2xl">
+                    class="bg-white rounded-3xl p-12 border border-gray-200 shadow-lg">
                     <div class="relative inline-block mb-8">
                         <div class="absolute inset-0 bg-[#B3224D] rounded-full blur-2xl opacity-30 animate-pulse"></div>
                         <div
@@ -44,8 +44,8 @@
                         </div>
                     </div>
 
-                    <h2 class="text-3xl font-bold text-white mb-4">Escáner de Tickets</h2>
-                    <p class="text-gray-300 text-lg mb-8 max-w-md mx-auto">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Escáner de Tickets</h2>
+                    <p class="text-gray-600 text-lg mb-8 max-w-md mx-auto">
                         Activa tu cámara para comenzar a validar los códigos QR de los tickets en tiempo real
                     </p>
 
@@ -99,17 +99,17 @@
                     <!-- Mensaje flotante central -->
                     <div class="absolute inset-0 flex items-end justify-center pb-24 pointer-events-none">
                         <div
-                            class="bg-gradient-to-r from-[#B3224D] to-[#8B1A3D] backdrop-blur-md px-8 py-4 rounded-2xl border-2 border-white/20 shadow-2xl transform animate-float">
+                            class="bg-white border-2 border-[#B3224D] backdrop-blur-md px-8 py-4 rounded-2xl shadow-xl transform animate-float">
                             <div class="flex items-center gap-3">
                                 <div v-if="procesando" class="flex gap-1">
-                                    <div class="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                                    <div class="w-2 h-2 bg-white rounded-full animate-bounce"
+                                    <div class="w-2 h-2 bg-[#B3224D] rounded-full animate-bounce"></div>
+                                    <div class="w-2 h-2 bg-[#B3224D] rounded-full animate-bounce"
                                         style="animation-delay: 0.1s"></div>
-                                    <div class="w-2 h-2 bg-white rounded-full animate-bounce"
+                                    <div class="w-2 h-2 bg-[#B3224D] rounded-full animate-bounce"
                                         style="animation-delay: 0.2s"></div>
                                 </div>
-                                <ScanLine v-else class="w-6 h-6 text-white animate-pulse" />
-                                <p class="text-white font-bold text-lg">
+                                <ScanLine v-else class="w-6 h-6 text-[#B3224D] animate-pulse" />
+                                <p class="text-gray-900 font-bold text-lg">
                                     {{ procesando ? 'Validando ticket...' : 'Apunta al código QR' }}
                                 </p>
                             </div>

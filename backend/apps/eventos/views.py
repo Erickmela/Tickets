@@ -239,11 +239,19 @@ class EventoViewSet(viewsets.ModelViewSet):
         tickets_data = []
         for ticket in tickets:
             tickets_data.append({
-                'codigo_qr': str(ticket.codigo_uuid),
+                # UUID para referencia visual (código legible en el ticket)
+                'codigo_uuid': str(ticket.codigo_uuid),
+                # Token encriptado para el QR Code (seguridad)
+                'token_qr': ticket.token_encriptado,
+                # URL del QR generado (si existe)
+                'qr_image_url': ticket.qr_image.url if ticket.qr_image else None,
+                # Datos del titular
                 'nombre_titular': ticket.nombre_titular,
                 'dni_titular': ticket.dni_titular,
+                # Datos de zona
                 'zona': ticket.zona.nombre,
                 'precio': float(ticket.zona.precio),
+                # Estado y fecha
                 'estado': ticket.estado,
                 'fecha_compra': ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M')
             })

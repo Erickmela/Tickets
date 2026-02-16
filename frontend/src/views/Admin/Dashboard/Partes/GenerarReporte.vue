@@ -49,13 +49,15 @@ const generarExcel = async () => {
             ['Lugar:', evento.lugar],
             ['Región:', evento.region],
             [],
-            ['Código QR', 'Nombre Titular', 'DNI Titular', 'Zona', 'Precio', 'Estado', 'Fecha Compra']
+            [],
+            ['UUID (Código Visual)', 'Token QR (Para Código QR)', 'Nombre Titular', 'DNI Titular', 'Zona', 'Precio', 'Estado', 'Fecha Compra']
         ];
 
         // Agregar cada ticket como una fila
         tickets.forEach(ticket => {
             ticketsData.push([
-                ticket.codigo_qr,
+                ticket.codigo_uuid,           // UUID legible en el ticket impreso
+                ticket.token_qr,              // Token encriptado para el QR Code
                 ticket.nombre_titular,
                 ticket.dni_titular,
                 ticket.zona,
@@ -70,7 +72,8 @@ const generarExcel = async () => {
 
         // Ajustar anchos de columna
         ws['!cols'] = [
-            { wch: 38 }, // Código QR
+            { wch: 38 }, // UUID
+            { wch: 80 }, // Token QR (largo, encriptado)
             { wch: 30 }, // Nombre Titular
             { wch: 12 }, // DNI
             { wch: 20 }, // Zona
@@ -116,13 +119,12 @@ const generarCSV = async () => {
         csv += 'Hora,' + evento.hora_inicio + '\n';
         csv += 'Lugar,' + evento.lugar + '\n';
         csv += 'Región,' + evento.region + '\n\n';
-
         // Encabezados de columnas
-        csv += 'Código QR,Nombre Titular,DNI Titular,Zona,Precio,Estado,Fecha Compra\n';
+        csv += 'UUID,Token QR (Para Código QR),Nombre Titular,DNI Titular,Zona,Precio,Estado,Fecha Compra\n';
 
         // Agregar cada ticket
         tickets.forEach(ticket => {
-            csv += `${ticket.codigo_qr},${ticket.nombre_titular},${ticket.dni_titular},${ticket.zona},S/ ${ticket.precio.toFixed(2)},${ticket.estado},${ticket.fecha_compra}\n`;
+            csv += `${ticket.codigo_uuid},${ticket.token_qr},${ticket.nombre_titular},${ticket.dni_titular},${ticket.zona},S/ ${ticket.precio.toFixed(2)},${ticket.estado},${ticket.fecha_compra}\n`;
         });
 
         // Crear blob y descargar
