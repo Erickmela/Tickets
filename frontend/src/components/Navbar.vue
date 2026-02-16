@@ -138,6 +138,7 @@
                                     </RouterLink>
 
                                     <RouterLink
+                                        v-if="userRole === 'CLIENTE'"
                                         to="/mis-tickets"
                                         class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                     >
@@ -228,6 +229,7 @@
                         </RouterLink>
 
                         <RouterLink
+                            v-if="userRole === 'CLIENTE'"
                             to="/mis-tickets"
                             @click="closeMenu"
                             class="flex items-center gap-3 px-3 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700"

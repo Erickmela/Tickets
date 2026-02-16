@@ -128,6 +128,12 @@ const navItems = [
         roles: ["ADMIN", "VENDEDOR"],
     },
     {
+        name: "Mis tickets",
+        icon: TicketPercent,
+        route: "/mis-tickets",
+        roles: ["CLIENTE"],
+    },
+    {
         name: "Reportes",
         icon: BarChart3,
         route: "/reportes",

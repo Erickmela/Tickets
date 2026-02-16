@@ -4,10 +4,11 @@ Aplicando principios de serialización limpia
 """
 from rest_framework import serializers
 from .models import Evento, Zona
-
+from config.hashid_utils import encode_id
 
 class ZonaSerializer(serializers.ModelSerializer):
     """Serializer para Zona"""
+    encoded_id = serializers.SerializerMethodField()
     tickets_vendidos = serializers.IntegerField(read_only=True)
     tickets_disponibles = serializers.IntegerField(read_only=True)
     porcentaje_ocupacion = serializers.FloatField(read_only=True)
@@ -15,11 +16,15 @@ class ZonaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Zona
-        fields = ['id', 'evento', 'nombre', 'descripcion', 'precio', 
+        fields = ['id', 'encoded_id', 'evento', 'nombre', 'descripcion', 'precio', 
                   'capacidad', 'capacidad_maxima', 'activo', 'tickets_vendidos', 
                   'tickets_disponibles', 'porcentaje_ocupacion']
-        read_only_fields = ['tickets_vendidos', 'tickets_disponibles', 'porcentaje_ocupacion']
+        read_only_fields = ['tickets_vendidos', 'tickets_disponibles', 'porcentaje_ocupacion', 'encoded_id']
         extra_kwargs = {'capacidad_maxima': {'write_only': True}}
+    
+    def get_encoded_id(self, obj):
+        """Retornar ID encriptado"""
+        return encode_id(obj.id)
     
     def to_representation(self, instance):
         """Agregar campos calculados"""
@@ -32,13 +37,20 @@ class ZonaSerializer(serializers.ModelSerializer):
 
 class ZonaSimpleSerializer(serializers.ModelSerializer):
     """Serializer simple para zonas sin información extra"""
+    encoded_id = serializers.SerializerMethodField()
+    
     class Meta:
         model = Zona
-        fields = ['id', 'nombre', 'descripcion', 'precio', 'capacidad_maxima', 'activo']
+        fields = ['id', 'encoded_id', 'nombre', 'descripcion', 'precio', 'capacidad_maxima', 'activo']
+    
+    def get_encoded_id(self, obj):
+        """Retornar ID encriptado"""
+        return encode_id(obj.id)
 
 
 class ZonaListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listado de zonas"""
+    encoded_id = serializers.SerializerMethodField()
     tickets_disponibles = serializers.IntegerField(read_only=True)
     tickets_vendidos = serializers.IntegerField(read_only=True)
     capacidad = serializers.IntegerField(source='capacidad_maxima')
@@ -48,8 +60,12 @@ class ZonaListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Zona
-        fields = ['id', 'nombre', 'descripcion', 'precio', 'capacidad', 'tickets_disponibles', 
+        fields = ['id', 'encoded_id', 'nombre', 'descripcion', 'precio', 'capacidad', 'tickets_disponibles', 
                   'tickets_vendidos', 'activo', 'evento_nombre', 'evento_fecha', 'evento_lugar']
+    
+    def get_encoded_id(self, obj):
+        """Retornar ID encriptado"""
+        return encode_id(obj.id)
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -60,6 +76,7 @@ class ZonaListSerializer(serializers.ModelSerializer):
 
 class EventoSerializer(serializers.ModelSerializer):
     """Serializer completo para Evento con zonas"""
+    encoded_id = serializers.SerializerMethodField()
     zonas = ZonaSimpleSerializer(many=True, read_only=True)
     total_zonas = serializers.IntegerField(read_only=True)
     capacidad_total = serializers.IntegerField(read_only=True)
@@ -68,11 +85,15 @@ class EventoSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Evento
-        fields = ['id', 'nombre', 'descripcion', 'categoria', 'fecha', 'hora_inicio',
+        fields = ['id', 'encoded_id', 'nombre', 'descripcion', 'categoria', 'fecha', 'hora_inicio',
                   'lugar', 'region', 'estado', 'activo', 'imagen_principal', 'imagen_flyer',
                   'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas', 'zonas', 'total_zonas', 'capacidad_total', 
                   'tickets_vendidos', 'disponibilidad', 'fecha_creacion']
-        read_only_fields = ['fecha_creacion']
+        read_only_fields = ['fecha_creacion', 'encoded_id']
+    
+    def get_encoded_id(self, obj):
+        """Retornar ID encriptado"""
+        return encode_id(obj.id)
     
     def to_representation(self, instance):
         """Agregar campos calculados"""
@@ -86,15 +107,20 @@ class EventoSerializer(serializers.ModelSerializer):
 
 class EventoListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listado de eventos"""
+    encoded_id = serializers.SerializerMethodField()
     total_zonas = serializers.IntegerField(read_only=True)
     capacidad_total = serializers.IntegerField(read_only=True)
     tickets_vendidos = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Evento
-        fields = ['id', 'nombre', 'descripcion', 'categoria', 'fecha', 'hora_inicio', 'lugar', 'region', 'estado', 'activo',
+        fields = ['id', 'encoded_id', 'nombre', 'descripcion', 'categoria', 'fecha', 'hora_inicio', 'lugar', 'region', 'estado', 'activo',
                   'imagen_principal', 'imagen_flyer', 'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas',
                   'total_zonas', 'capacidad_total', 'tickets_vendidos']
+    
+    def get_encoded_id(self, obj):
+        """Retornar ID encriptado"""
+        return encode_id(obj.id)
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)

@@ -22,7 +22,8 @@ const isSubmitting = ref(false);
 const isLoading = ref(true);
 const errors = ref({});
 
-const eventoId = computed(() => route.params.id);
+// Leer el slug que puede ser un encoded_id o un id normal
+const eventoId = computed(() => route.params.slug);
 
 // Opciones de categoría
 const categorias = [

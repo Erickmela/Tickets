@@ -23,7 +23,8 @@ const toastGlobalHelper = useToasts(toastGlobal);
 const authStore = useAuthStore();
 const eventosStore = useEventosStore();
 
-const eventoId = computed(() => parseInt(route.params.evento_id));
+// Leer el slug que puede ser un encoded_id o un id normal
+const eventoId = computed(() => route.params.slug);
 const evento = ref(null);
 
 const itemsxPage = ref(10);

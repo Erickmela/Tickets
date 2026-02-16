@@ -91,13 +91,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresRole: ['ADMIN'] }
     },
     {
-      path: '/admin/eventos/:id/editar',
+      path: '/admin/eventos/:slug/editar',
       name: 'admin-eventos-editar',
       component: () => import('../views/Admin/Eventos/Editar.vue'),
       meta: { requiresAuth: true, requiresRole: ['ADMIN'] }
     },
     {
-      path: '/admin/eventos/:evento_id/zonas',
+      path: '/admin/eventos/:slug/zonas',
       name: 'admin-zonas',
       component: () => import('../views/Admin/Zonas/Index.vue'),
       meta: { requiresAuth: true, requiresRole: ['ADMIN'] }

@@ -6,11 +6,13 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.shortcuts import get_object_or_404
 from .models import Evento, Zona
 from .serializers import (
     EventoSerializer, EventoListSerializer, EventoCreateSerializer,
     ZonaSerializer, ZonaListSerializer
 )
+from config.hashid_utils import decode_id
 
 
 class EventoViewSet(viewsets.ModelViewSet):
@@ -22,6 +24,26 @@ class EventoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'lugar']
+    
+    def get_object(self):
+        """
+        Sobrescribir para permitir búsqueda por ID o encoded_id
+        """
+        lookup_value = self.kwargs.get('pk')
+        
+        # Intentar decodificar como encoded_id primero
+        decoded_id = decode_id(lookup_value)
+        
+        if decoded_id:
+            # Si se pudo decodificar, buscar por el ID decodificado
+            return get_object_or_404(self.queryset, pk=decoded_id)
+        
+        # Si no se pudo decodificar, intentar como ID normal
+        try:
+            return get_object_or_404(self.queryset, pk=int(lookup_value))
+        except (ValueError, TypeError):
+            # Si tampoco es un número válido, dejar que Django maneje el error
+            return super().get_object()
     
     def get_permissions(self):
         """
@@ -279,6 +301,26 @@ class ZonaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'evento__nombre']
     
+    def get_object(self):
+        """
+        Sobrescribir para permitir búsqueda por ID o encoded_id
+        """
+        lookup_value = self.kwargs.get('pk')
+        
+        # Intentar decodificar como encoded_id primero
+        decoded_id = decode_id(lookup_value)
+        
+        if decoded_id:
+            # Si se pudo decodificar, buscar por el ID decodificado
+            return get_object_or_404(self.queryset, pk=decoded_id)
+        
+        # Si no se pudo decodificar, intentar como ID normal
+        try:
+            return get_object_or_404(self.queryset, pk=int(lookup_value))
+        except (ValueError, TypeError):
+            # Si tampoco es un número válido, dejar que Django maneje el error
+            return super().get_object()
+    
     def get_permissions(self):
         """
         Sobrescribir permisos según acción
@@ -300,7 +342,13 @@ class ZonaViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         evento_id = self.request.query_params.get('evento_id')
         if evento_id:
-            queryset = queryset.filter(evento_id=evento_id)
+            # Intentar decodificar el ID por si es un encoded_id
+            decoded_id = decode_id(evento_id)
+            if decoded_id:
+                queryset = queryset.filter(evento_id=decoded_id)
+            else:
+                # Si no se puede decodificar, usar como ID normal
+                queryset = queryset.filter(evento_id=evento_id)
         return queryset
     
     @action(detail=False, methods=['get'])
@@ -308,7 +356,7 @@ class ZonaViewSet(viewsets.ModelViewSet):
         """
         Obtener solo las zonas con disponibilidad
         Parámetros:
-            - evento_id: ID del evento (requerido)
+            - evento_id: ID del evento (requerido) o encoded_id
             - debug: Si es '1', devuelve información de debug
         """
         evento_id = request.query_params.get('evento_id')
@@ -319,8 +367,12 @@ class ZonaViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Intentar decodificar el ID por si es un encoded_id
+        decoded_id = decode_id(evento_id)
+        lookup_id = decoded_id if decoded_id else evento_id
+        
         try:
-            evento = Evento.objects.get(id=evento_id, activo=True)
+            evento = Evento.objects.get(id=lookup_id, activo=True)
         except Evento.DoesNotExist:
             return Response(
                 {'error': 'Evento no encontrado o no está activo'},
