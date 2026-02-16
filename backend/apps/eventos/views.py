@@ -79,11 +79,10 @@ class EventoViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def activar(self, request, pk=None):
-        """Activar un evento (desactivando los demás)"""
+        """Activar un evento"""
         evento = self.get_object()
-        # Desactivar todos los eventos
-        Evento.objects.update(activo=False)
         # Activar este evento
+        evento.estado = '2'  # ACTIVO
         evento.activo = True
         evento.save()
         return Response({'status': 'Evento activado correctamente'})

@@ -67,25 +67,27 @@ const tarjetas = computed(() => [
         <div v-for="(tarjeta, index) in tarjetas" :key="index"
             class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow">
             <div v-if="loading" class="animate-pulse">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                </div>
-                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            </div>
-
-            <div v-else>
-                <div class="flex items-center justify-between mb-4">
-                    <div :class="[tarjeta.bg, 'p-3 rounded-full']">
-                        <component :is="tarjeta.icon" :size="24" :stroke-width="2" :class="tarjeta.color" />
+                <div class="flex items-center gap-4">
+                    <div class="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0"></div>
+                    <div class="flex-1">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                        <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     </div>
                 </div>
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                    {{ tarjeta.titulo }}
-                </p>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                    {{ tarjeta.valor }}
-                </p>
+            </div>
+
+            <div v-else class="flex items-center justify-between gap-4">
+                <div :class="[tarjeta.bg, 'p-3 rounded-full flex-shrink-0']">
+                    <component :is="tarjeta.icon" :size="24" :stroke-width="2" :class="tarjeta.color" />
+                </div>
+                <div class="flex-1 text-right">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        {{ tarjeta.titulo }}
+                    </p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                        {{ tarjeta.valor }}
+                    </p>
+                </div>
             </div>
         </div>
     </div>

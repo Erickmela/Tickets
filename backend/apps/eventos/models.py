@@ -117,15 +117,11 @@ class Evento(models.Model):
     
     def clean(self):
         """
-        Validación: Solo un evento puede estar en estado ACTIVO a la vez
+        Validación del modelo
         Principio de validación centralizada
         """
-        if self.estado == '2':  # ACTIVO
-            eventos_activos = Evento.objects.filter(estado='2')
-            if self.pk:
-                eventos_activos = eventos_activos.exclude(pk=self.pk)
-            if eventos_activos.exists():
-                raise ValidationError('Ya existe un evento en estado ACTIVO. Cámbialo a otro estado antes de activar este.')
+        # Validaciones personalizadas si se necesitan en el futuro
+        pass
     
     def save(self, *args, **kwargs):
         # Sincronizar campo activo con estado

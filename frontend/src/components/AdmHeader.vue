@@ -125,8 +125,16 @@ onBeforeUnmount(() => {
                 <div class="relative user-dropdown">
                     <button @click="toggleUserDropdown"
                         class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                        <img :src="user?.profile_photo_url || '/default-avatar.png'
-                            " :alt="user?.name" class="w-8 h-8 rounded-full border-2 border-orange-500" />
+                        <!-- Avatar con foto -->
+                        <img v-if="user?.profile_photo_url" 
+                            :src="user.profile_photo_url" 
+                            :alt="user?.name" 
+                            class="w-8 h-8 rounded-full border-2 border-[#B3224D]" />
+                        <!-- Avatar con inicial -->
+                        <div v-else
+                            class="w-8 h-8 rounded-full bg-[#B3224D] text-white flex items-center justify-center font-semibold text-sm border-2 border-[#B3224D]">
+                            {{ user?.nombre_completo?.charAt(0).toUpperCase() || 'U' }}
+                        </div>
                         <div class="hidden md:block text-left">
                             <p class="text-sm font-medium text-gray-900 dark:text-white">
                                 {{ user?.name }}

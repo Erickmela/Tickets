@@ -127,7 +127,7 @@ const mostrarContenido = computed(() => eventoSeleccionado.value !== null);
     <AdmLayout>
         <ToastNotification ref="toast" />
 
-        <HeaderSecction title="Dashboard de Ventas" description="Análisis y estadísticas de ventas por evento">
+        <HeaderSecction title="Dashboard" description="Análisis y estadísticas de ventas por evento">
             <template #icon>
                 <BarChart3 :size="32" :stroke-width="2" class="text-[#B3224D]" />
             </template>

@@ -55,11 +55,10 @@ onMounted(() => {
 
         <div v-else>
             <select v-model="eventoSeleccionado"
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#B3224D] focus:border-transparent dark:bg-gray-700 dark:text-white text-base">
+                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#B3224D] focus:border-transparent dark:bg-gray-700 dark:text-white text-sm">
                 <option value="" disabled>Selecciona un evento</option>
                 <option v-for="evento in eventos" :key="evento.id" :value="evento.id">
-                    {{ evento.nombre }} - {{ new Date(evento.fecha).toLocaleDateString('es-PE') }}
-                    <span v-if="evento.estado === '2'">(Activo)</span>
+                    {{ evento.nombre }}{{ evento.estado === '2' ? ' ' : '' }}
                 </option>
             </select>
         </div>
