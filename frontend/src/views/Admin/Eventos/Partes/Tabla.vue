@@ -44,6 +44,24 @@ const formatHora = (hora) => {
     if (!hora) return '-';
     return hora;
 };
+
+// Función para formatear fecha y hora juntas
+const formatFechaHora = (fecha, hora) => {
+    const fechaFormateada = new Date(fecha).toLocaleDateString('es-PE', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+    const horaFormateada = hora || '-';
+    return `${fechaFormateada} ${horaFormateada !== '-' ? '• ' + horaFormateada : ''}`;
+};
+
+// Función para obtener URL completa de imagen
+const getImagenUrl = (imagenPath) => {
+    if (!imagenPath) return null;
+    if (imagenPath.startsWith('http')) return imagenPath;
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${imagenPath}`;
+};
 </script>
 
 <template>
@@ -53,10 +71,10 @@ const formatHora = (hora) => {
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-transparent">
                     <tr>
+                        <TableTh name="Portada" class="text-center" />
                         <TableTh name="Nombre" />
-                        <TableTh name="Fecha" />
-                        <TableTh name="Hora" />
-                        <TableTh name="Lugar" />
+                        <TableTh name="Fecha y Hora" />
+                        <TableTh name="Región" />
                         <TableTh name="Capacidad Total" class="text-center" />
                         <TableTh name="Vendidos" class="text-center" />
                         <TableTh name="Estado" class="text-center" />
@@ -90,6 +108,19 @@ const formatHora = (hora) => {
                     </tr>
 
                     <tr v-else v-for="dat in datos" :key="dat.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <TableTd class="text-center">
+                            <div class="flex justify-center items-center">
+                                <div v-if="dat.imagen_principal" class="w-16 h-16 rounded-lg overflow-hidden shadow-md">
+                                    <img :src="getImagenUrl(dat.imagen_principal)" 
+                                         :alt="dat.nombre"
+                                         class="w-full h-full object-cover" />
+                                </div>
+                                <div v-else class="w-16 h-16 rounded-lg bg-gradient-to-br from-[#B3224D] to-[#8d1a3c] flex items-center justify-center">
+                                    <span class="text-white text-2xl font-bold">{{ dat.nombre ? dat.nombre.charAt(0) : 'E' }}</span>
+                                </div>
+                            </div>
+                        </TableTd>
+
                         <TableTd class="whitespace-nowrap">
                             <div class="flex flex-col">
                                 <span class="font-medium text-gray-900 dark:text-white">
@@ -101,11 +132,18 @@ const formatHora = (hora) => {
                             </div>
                         </TableTd>
 
-                        <TableTd :contend="formatFecha(dat.fecha)" class="whitespace-nowrap" />
+                        <TableTd class="whitespace-nowrap">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-gray-900 dark:text-white">
+                                    {{ formatFecha(dat.fecha) }}
+                                </span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ formatHora(dat.hora_inicio) }}
+                                </span>
+                            </div>
+                        </TableTd>
 
-                        <TableTd :contend="formatHora(dat.hora_inicio)" class="whitespace-nowrap" />
-
-                        <TableTd :contend="dat.lugar" class="whitespace-nowrap" />
+                        <TableTd :contend="dat.region || '-'" class="whitespace-nowrap" />
 
                         <TableTd class="text-center">
                             <span class="font-semibold text-gray-900 dark:text-white">

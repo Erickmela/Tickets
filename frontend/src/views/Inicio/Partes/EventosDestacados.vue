@@ -1,56 +1,59 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { RouterLink } from 'vue-router';
+import { Music, Trophy, Drama, Mic, Tent, Utensils, PartyPopper, Sparkles, Calendar, MapPin } from 'lucide-vue-next';
 import ButtonPrimary from '@/components/Buttons/ButtonPrimary.vue';
+import { eventosService } from '@/services/eventosService';
 
 const eventosDestacados = ref([]);
 const loading = ref(true);
 
+// Mapeo de categorías a iconos de Lucide
+const categoriaIconos = {
+    'Música': Music,
+    'Musica': Music,
+    'Deportes': Trophy,
+    'Teatro': Drama,
+    'Conferencias': Mic,
+    'Festivales': Tent,
+    'Gastronomía': Utensils,
+    'Gastronomia': Utensils,
+    'Infantiles': PartyPopper,
+    'Otros': Sparkles
+};
+
 onMounted(async () => {
-    // Aquí podrías cargar los eventos desde tu API
-    // Por ahora mostramos datos de ejemplo
-    setTimeout(() => {
-        eventosDestacados.value = [
-            {
-                id: 1,
-                nombre: 'Festival de Rock 2026',
-                fecha: '2026-03-15',
-                lugar: 'Estadio Nacional',
-                precio: 'S/ 80.00',
-                imagen: '🎸',
-                categoria: 'Música'
-            },
-            {
-                id: 2,
-                nombre: 'Concierto de Cumbia',
-                fecha: '2026-03-20',
-                lugar: 'Arena Lima',
-                precio: 'S/ 50.00',
-                imagen: '🎵',
-                categoria: 'Música'
-            },
-            {
-                id: 3,
-                nombre: 'Partido Universitario vs Alianza',
-                fecha: '2026-03-25',
-                lugar: 'Estadio Monumental',
-                precio: 'S/ 60.00',
-                imagen: '⚽',
-                categoria: 'Deportes'
-            },
-            {
-                id: 4,
-                nombre: 'Obra: Romeo y Julieta',
-                fecha: '2026-04-01',
-                lugar: 'Teatro Municipal',
-                precio: 'S/ 70.00',
-                imagen: '🎭',
-                categoria: 'Teatro'
-            }
-        ];
+    try {
+        // Cargar eventos activos desde la API
+        const eventos = await eventosService.getEventosActivos();
+        
+        // Tomar solo los primeros 4 eventos para destacados
+        eventosDestacados.value = eventos.slice(0, 4).map(evento => ({
+            ...evento,
+            icono: categoriaIconos[evento.categoria] || Sparkles,
+            precioMinimo: obtenerPrecioMinimo(evento)
+        }));
+    } catch (error) {
+        if (error.response?.status === 403) {
+            console.warn('Acceso denegado a eventos. Reinicia el servidor backend.');
+        } else if (error.response?.status === 404) {
+            console.info('No hay eventos activos disponibles.');
+        } else {
+            console.error('Error cargando eventos:', error.message);
+        }
+        eventosDestacados.value = [];
+    } finally {
         loading.value = false;
-    }, 500);
+    }
 });
+
+const obtenerPrecioMinimo = (evento) => {
+    if (evento.zonas && evento.zonas.length > 0) {
+        const precioMin = Math.min(...evento.zonas.map(z => parseFloat(z.precio)));
+        return `Desde S/ ${precioMin.toFixed(2)}`;
+    }
+    return 'Consultar precio';
+};
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -92,7 +95,12 @@ const formatDate = (dateString) => {
                 >
                     <!-- Imagen del evento -->
                     <div class="h-48 bg-gradient-to-br from-[#B3224D] to-[#8d1a3c] flex items-center justify-center">
-                        <span class="text-8xl">{{ evento.imagen }}</span>
+                        <component 
+                            :is="evento.icono" 
+                            :size="100" 
+                            :stroke-width="1.5"
+                            class="text-white/90"
+                        />
                     </div>
 
                     <!-- Contenido -->
@@ -105,17 +113,17 @@ const formatDate = (dateString) => {
                         </h3>
                         <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                             <p class="flex items-center gap-2">
-                                <span>📅</span>
+                                <Calendar :size="16" :stroke-width="2" class="text-[#B3224D]" />
                                 {{ formatDate(evento.fecha) }}
                             </p>
                             <p class="flex items-center gap-2">
-                                <span>📍</span>
+                                <MapPin :size="16" :stroke-width="2" class="text-[#B3224D]" />
                                 {{ evento.lugar }}
                             </p>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-xl font-bold text-[#B3224D]">
-                                {{ evento.precio }}
+                                {{ evento.precioMinimo }}
                             </span>
                             <RouterLink 
                                 :to="`/eventos/${evento.id}`"

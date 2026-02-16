@@ -10,12 +10,14 @@
   "dependencies": {
     "@zxing/library": "^0.20.0",
     "axios": "^1.6.5",
+    "chart.js": "^4.5.1",
     "jsqr": "^1.4.0",
     "lucide-vue-next": "^0.316.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.15",
     "vue-qrcode-reader": "^3.1.4",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.3",

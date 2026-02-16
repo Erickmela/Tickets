@@ -1,5 +1,6 @@
 <script setup>
 import { RouterLink } from "vue-router";
+import { Ticket, Smartphone } from 'lucide-vue-next';
 import ButtonPrimary from "@/components/Buttons/ButtonPrimary.vue";
 import ButtonSecondary from "@/components/Buttons/ButtonSecondary.vue";
 </script>
@@ -76,20 +77,24 @@ import ButtonSecondary from "@/components/Buttons/ButtonSecondary.vue";
                         
                         <!-- Elementos flotantes alrededor -->
                         <div class="absolute -top-8 -left-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 animate-float">
-                            <div class="flex items-center gap-2">
-                                <span class="text-3xl">🎫</span>
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-[#B3224D]/10 rounded-lg">
+                                    <Ticket :size="32" :stroke-width="2" class="text-[#B3224D]" />
+                                </div>
                                 <div>
-                                    <p class="text-xs text-gray-500">Tickets</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Tickets</p>
                                     <p class="font-bold text-[#B3224D]">Seguros</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="absolute -bottom-4 -right-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 animate-float" style="animation-delay: 0.5s;">
-                            <div class="flex items-center gap-2">
-                                <span class="text-3xl">📱</span>
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-[#B3224D]/10 rounded-lg">
+                                    <Smartphone :size="32" :stroke-width="2" class="text-[#B3224D]" />
+                                </div>
                                 <div>
-                                    <p class="text-xs text-gray-500">Validación</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Validación</p>
                                     <p class="font-bold text-[#B3224D]">QR</p>
                                 </div>
                             </div>

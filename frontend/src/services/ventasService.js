@@ -89,6 +89,19 @@ export const ventasService = {
   },
 
   /**
+   * Obtener ventas por evento
+   */
+  async getVentasPorEvento(eventoId) {
+    const response = await api.get('/ventas/ventas/', {
+      params: { 
+        evento_id: eventoId,
+        page_size: 1000 // Obtener todas las ventas
+      }
+    })
+    return response.data.results || response.data
+  },
+
+  /**
    * Buscar cliente por DNI
    */
   async buscarClientePorDNI(dni) {

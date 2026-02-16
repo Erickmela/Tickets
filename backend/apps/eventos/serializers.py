@@ -68,8 +68,8 @@ class EventoSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Evento
-        fields = ['id', 'nombre', 'descripcion', 'fecha', 'hora_inicio',
-                  'lugar', 'estado', 'activo', 'imagen_principal', 'imagen_flyer',
+        fields = ['id', 'nombre', 'descripcion', 'categoria', 'fecha', 'hora_inicio',
+                  'lugar', 'region', 'estado', 'activo', 'imagen_principal', 'imagen_flyer',
                   'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas', 'zonas', 'total_zonas', 'capacidad_total', 
                   'tickets_vendidos', 'disponibilidad', 'fecha_creacion']
         read_only_fields = ['fecha_creacion']
@@ -92,7 +92,7 @@ class EventoListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Evento
-        fields = ['id', 'nombre', 'descripcion', 'fecha', 'hora_inicio', 'lugar', 'estado', 'activo',
+        fields = ['id', 'nombre', 'descripcion', 'categoria', 'fecha', 'hora_inicio', 'lugar', 'region', 'estado', 'activo',
                   'imagen_principal', 'imagen_flyer', 'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas',
                   'total_zonas', 'capacidad_total', 'tickets_vendidos']
     
@@ -110,7 +110,7 @@ class EventoCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Evento
-        fields = ['nombre', 'descripcion', 'fecha', 'hora_inicio', 'lugar', 'estado', 'activo',
+        fields = ['nombre', 'descripcion', 'categoria', 'fecha', 'hora_inicio', 'lugar', 'region', 'estado', 'activo',
                   'imagen_principal', 'imagen_flyer', 'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas',
                   'zonas_data']
     

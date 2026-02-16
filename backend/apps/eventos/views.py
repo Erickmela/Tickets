@@ -5,7 +5,7 @@ Aplicando Single Responsibility y encapsulación
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Evento, Zona
 from .serializers import (
     EventoSerializer, EventoListSerializer, EventoCreateSerializer,
@@ -22,6 +22,16 @@ class EventoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'lugar']
+    
+    def get_permissions(self):
+        """
+        Sobrescribir permisos según acción
+        - list, retrieve, evento_activo, eventos_activos: Acceso público
+        - Resto: Requiere autenticación
+        """
+        if self.action in ['list', 'retrieve', 'evento_activo', 'eventos_activos']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
     
     def get_serializer_class(self):
         """Seleccionar serializer según acción"""
@@ -165,6 +175,91 @@ class EventoViewSet(viewsets.ModelViewSet):
             },
             'zonas': zonas_stats
         })
+    
+    @action(detail=True, methods=['get'])
+    def evolucion_ventas(self, request, pk=None):
+        """Obtener evolución de ventas de los últimos 7 días"""
+        from django.db.models import Sum, Count
+        from django.utils import timezone
+        from datetime import timedelta
+        from apps.ventas.models import Venta
+        
+        evento = self.get_object()
+        dias = int(request.query_params.get('dias', 7))
+        
+        # Calcular rango de fechas
+        fecha_fin = timezone.now()
+        fecha_inicio = fecha_fin - timedelta(days=dias)
+        
+        # Obtener ventas del evento en el rango de fechas
+        ventas = Venta.objects.filter(
+            tickets__zona__evento=evento,
+            activo=True,
+            fecha_venta__gte=fecha_inicio,
+            fecha_venta__lte=fecha_fin
+        ).distinct()
+        
+        # Agrupar por fecha
+        evolucion = []
+        for i in range(dias):
+            fecha = fecha_inicio + timedelta(days=i)
+            fecha_str = fecha.strftime('%d %b')
+            
+            ventas_dia = ventas.filter(
+                fecha_venta__date=fecha.date()
+            )
+            
+            total_ventas_dia = ventas_dia.count()
+            ingresos_dia = ventas_dia.aggregate(
+                total=Sum('total_pagado')
+            )['total'] or 0
+            
+            evolucion.append({
+                'fecha': fecha_str,
+                'ventas': total_ventas_dia,
+                'ingresos': float(ingresos_dia)
+            })
+        
+        return Response(evolucion)
+    
+    @action(detail=True, methods=['get'])
+    def tickets_reporte(self, request, pk=None):
+        """Obtener todos los tickets del evento para generar reporte"""
+        from apps.ventas.models import Ticket
+        
+        evento = self.get_object()
+        
+        # Obtener todos los tickets del evento con información relacionada
+        tickets = Ticket.objects.filter(
+            zona__evento=evento
+        ).select_related(
+            'zona', 'venta'
+        ).order_by('zona__nombre', 'nombre_titular')
+        
+        # Serializar datos para el reporte
+        tickets_data = []
+        for ticket in tickets:
+            tickets_data.append({
+                'codigo_qr': str(ticket.codigo_uuid),
+                'nombre_titular': ticket.nombre_titular,
+                'dni_titular': ticket.dni_titular,
+                'zona': ticket.zona.nombre,
+                'precio': float(ticket.zona.precio),
+                'estado': ticket.estado,
+                'fecha_compra': ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M')
+            })
+        
+        return Response({
+            'evento': {
+                'nombre': evento.nombre,
+                'fecha': evento.fecha.strftime('%d/%m/%Y'),
+                'hora_inicio': evento.hora_inicio.strftime('%H:%M') if evento.hora_inicio else '-',
+                'lugar': evento.lugar,
+                'region': evento.region or '-'
+            },
+            'tickets': tickets_data,
+            'total_tickets': len(tickets_data)
+        })
 
 
 class ZonaViewSet(viewsets.ModelViewSet):
@@ -176,6 +271,16 @@ class ZonaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'evento__nombre']
+    
+    def get_permissions(self):
+        """
+        Sobrescribir permisos según acción
+        - list, retrieve, zonas_disponibles: Acceso público
+        - Resto: Requiere autenticación
+        """
+        if self.action in ['list', 'retrieve', 'zonas_disponibles']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
     
     def get_serializer_class(self):
         """Seleccionar serializer según acción"""

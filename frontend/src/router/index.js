@@ -1,5 +1,4 @@
 /**
- * Router - Aplicando Interface Segregation
  * Rutas organizadas por rol y funcionalidad
  */
 import { createRouter, createWebHistory } from 'vue-router'
@@ -41,13 +40,13 @@ const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: () => import('@/views/DashboardView.vue'),
+      component: () => import('@/views/Admin/Dashboard/Index.vue'),
       meta: { requiresAuth: true, requiresRole: ['ADMIN', 'VENDEDOR', 'VALIDADOR'] }
     },
     {
       path: '/admin/dashboard',
       name: 'admin-dashboard',
-      component: () => import('@/views/DashboardView.vue'),
+      component: () => import('@/views/Admin/Dashboard/Index.vue'),
       meta: { requiresAuth: true, requiresRole: ['ADMIN', 'VENDEDOR', 'VALIDADOR'] }
     },
     {

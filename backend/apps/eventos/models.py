@@ -15,11 +15,52 @@ class Evento(models.Model):
         ('3', 'Finalizado'),
     ]
     
+    REGION_CHOICES = [
+        ('Lima', 'Lima'),
+        ('Arequipa', 'Arequipa'),
+        ('Cusco', 'Cusco'),
+        ('La Libertad', 'La Libertad'),
+        ('Piura', 'Piura'),
+        ('Lambayeque', 'Lambayeque'),
+        ('Junín', 'Junín'),
+        ('Puno', 'Puno'),
+        ('Ica', 'Ica'),
+        ('Áncash', 'Áncash'),
+        ('Cajamarca', 'Cajamarca'),
+        ('Loreto', 'Loreto'),
+        ('San Martín', 'San Martín'),
+        ('Ucayali', 'Ucayali'),
+        ('Huánuco', 'Huánuco'),
+        ('Ayacucho', 'Ayacucho'),
+        ('Tacna', 'Tacna'),
+        ('Moquegua', 'Moquegua'),
+        ('Amazonas', 'Amazonas'),
+        ('Apurímac', 'Apurímac'),
+        ('Huancavelica', 'Huancavelica'),
+        ('Madre de Dios', 'Madre de Dios'),
+        ('Pasco', 'Pasco'),
+        ('Tumbes', 'Tumbes'),
+        ('Callao', 'Callao'),
+    ]
+    
+    CATEGORIA_CHOICES = [
+        ('Música', 'Música'),
+        ('Deportes', 'Deportes'),
+        ('Teatro', 'Teatro'),
+        ('Conferencias', 'Conferencias'),
+        ('Festivales', 'Festivales'),
+        ('Gastronomía', 'Gastronomía'),
+        ('Infantiles', 'Infantiles'),
+        ('Otros', 'Otros'),
+    ]
+    
     nombre = models.CharField('Nombre', max_length=200, unique=True)
     descripcion = models.TextField('Descripción', blank=True)
+    categoria = models.CharField('Categoría', max_length=50, choices=CATEGORIA_CHOICES, default='Otros')
     fecha = models.DateField('Fecha del Evento')
     hora_inicio = models.TimeField('Hora de Inicio', null=True, blank=True)
-    lugar = models.CharField('Lugar', max_length=300, blank=True)
+    lugar = models.CharField('Lugar', max_length=300, blank=True, help_text='Dirección exacta del evento')
+    region = models.CharField('Región', max_length=50, choices=REGION_CHOICES, default='Lima', help_text='Región donde se realiza el evento')
     estado = models.CharField('Estado', max_length=20, choices=ESTADO_CHOICES, default='1')
     activo = models.BooleanField('Activo', default=False, help_text='Solo un evento puede estar activo')
     

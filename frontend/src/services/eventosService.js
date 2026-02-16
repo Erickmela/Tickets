@@ -133,5 +133,31 @@ export const eventosService = {
       params: { cantidad }
     })
     return response.data
+  },
+
+  /**
+   * Obtener estadísticas completas del evento para dashboard
+   */
+  async getEstadisticasEvento(eventoId) {
+    const response = await api.get(`/eventos/eventos/${eventoId}/estadisticas/`)
+    return response.data
+  },
+
+  /**
+   * Obtener evolución de ventas de los últimos días
+   */
+  async getEvolucionVentas(eventoId, dias = 7) {
+    const response = await api.get(`/eventos/eventos/${eventoId}/evolucion_ventas/`, {
+      params: { dias }
+    })
+    return response.data
+  },
+
+  /**
+   * Obtener todos los tickets del evento para generar reporte
+   */
+  async getTicketsReporte(eventoId) {
+    const response = await api.get(`/eventos/eventos/${eventoId}/tickets_reporte/`)
+    return response.data
   }
 }

@@ -21,13 +21,35 @@ const toastHelper = useToasts(toast);
 const isSubmitting = ref(false);
 const errors = ref({});
 
+// Opciones de categoría
+const categorias = [
+    'Música',
+    'Deportes',
+    'Teatro',
+    'Conferencias',
+    'Festivales',
+    'Gastronomía',
+    'Infantiles',
+    'Otros'
+];
+
+// Opciones de región
+const regiones = [
+    'Lima', 'Arequipa', 'Cusco', 'La Libertad', 'Piura', 'Lambayeque',
+    'Junín', 'Puno', 'Ica', 'Áncash', 'Cajamarca', 'Loreto',
+    'San Martín', 'Ucayali', 'Huánuco', 'Ayacucho', 'Tacna', 'Moquegua',
+    'Amazonas', 'Apurímac', 'Huancavelica', 'Madre de Dios', 'Pasco', 'Tumbes', 'Callao'
+];
+
 // Formulario dividido en pasos
 const formBasico = ref({
     nombre: '',
     descripcion: '',
+    categoria: 'Otros',
     fecha: '',
     hora_inicio: '',
     lugar: '',
+    region: 'Lima',
     estado: '1' // Por defecto: Próximo
 });
 
@@ -108,11 +130,13 @@ const handleFinish = async () => {
         // Datos básicos
         formData.append('nombre', formBasico.value.nombre);
         formData.append('descripcion', formBasico.value.descripcion || '');
+        formData.append('categoria', formBasico.value.categoria);
         formData.append('fecha', formBasico.value.fecha);
         if (formBasico.value.hora_inicio && formBasico.value.hora_inicio.trim() !== '') {
             formData.append('hora_inicio', formBasico.value.hora_inicio);
         }
         formData.append('lugar', formBasico.value.lugar);
+        formData.append('region', formBasico.value.region);
         formData.append('estado', formBasico.value.estado);
 
         // Imágenes (solo si son Files válidos)
@@ -191,6 +215,25 @@ const volver = () => {
                                 placeholder="Describe el evento..."></textarea>
                         </div>
 
+                        <!-- Categoría y Región -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <InputLabel for="categoria" value="Categoría *" />
+                                <select id="categoria" v-model="formBasico.categoria"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#B3224D] focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option v-for="cat in categorias" :key="cat" :value="cat">{{ cat }}</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <InputLabel for="region" value="Región *" />
+                                <select id="region" v-model="formBasico.region"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#B3224D] focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option v-for="reg in regiones" :key="reg" :value="reg">{{ reg }}</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Fecha y Hora -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -238,6 +281,14 @@ const volver = () => {
                         <p class="text-sm text-gray-600 mb-4">
                             Sube las imágenes promocionales del evento (todas son opcionales)
                         </p>
+
+                        <div
+                            class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                            <p class="text-sm text-blue-800 dark:text-blue-300">
+                                <span class="font-semibold">Recomendación de portada:</span> Para la imagen principal
+                                usa dimensiones de <strong>1920x800 px</strong>. Formatos: JPG o PNG, peso máximo 500KB.
+                            </p>
+                        </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Imagen Principal -->

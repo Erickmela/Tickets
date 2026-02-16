@@ -37,3 +37,19 @@
     @apply bg-white rounded-xl shadow-md p-6;
   }
 }
+
+@layer utilities {
+  /* Animación de flotación suave */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+}
