@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
-import { useToasts } from "@/helpers/useToasts";
+import { useToasts } from "@/Helpers/useToasts";
 import { useAuthStore } from "@/stores/auth";
 import { useVentasStore } from "@/stores/ventas";
 

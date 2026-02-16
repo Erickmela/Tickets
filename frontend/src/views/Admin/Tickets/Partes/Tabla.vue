@@ -5,7 +5,7 @@ import { Eye } from 'lucide-vue-next';
 import TableTh from '@/components/Admin/TableTh.vue';
 import TableTd from '@/components/Admin/TableTd.vue';
 import ButtonMenu from '@/components/Admin/ButtonMenu.vue';
-import Dropdown from '@/helpers/Dropdown';
+import Dropdown from '@/Helpers/Dropdown';
 import MenuTable from '@/components/Admin/MenuTable.vue';
 
 const props = defineProps({

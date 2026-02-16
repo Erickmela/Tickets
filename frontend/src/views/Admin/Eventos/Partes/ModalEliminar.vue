@@ -4,7 +4,7 @@ import ToastNotification from "@/components/ToastNotification.vue";
 import DialogModal from "@/components/DialogModal.vue";
 import ButtonCancel from "@/components/Buttons/ButtonCancel.vue";
 import ButtonSave from "@/components/Buttons/ButtonSave.vue";
-import { useToasts } from "@/helpers/useToasts";
+import { useToasts } from "@/Helpers/useToasts";
 import { useEventosStore } from "@/stores/eventos";
 
 const emit = defineEmits(["close", "data_destroyed"]);

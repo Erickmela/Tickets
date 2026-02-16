@@ -1,12 +1,12 @@
 <script setup>
 import { computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import { hasPermission, dateTimeText, formatPrice } from "@/helpers/Main";
+import { hasPermission, dateTimeText, formatPrice } from "@/Helpers/Main";
 
 import TableTh from "@/components/Admin/TableTh.vue";
 import TableTd from "@/components/Admin/TableTd.vue";
 import ButtonMenu from "@/components/Admin/ButtonMenu.vue";
-import Dropdown from "@/helpers/Dropdown";
+import Dropdown from "@/Helpers/Dropdown";
 import MenuTable from "@/components/Admin/MenuTable.vue";
 
 const props = defineProps({

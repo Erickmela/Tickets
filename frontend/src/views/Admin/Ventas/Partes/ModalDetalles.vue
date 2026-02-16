@@ -3,9 +3,9 @@ import { ref, watch, computed } from "vue";
 import DialogModal from "@/components/DialogModal.vue";
 import ButtonCancel from "@/components/Buttons/ButtonCancel.vue";
 import ToastNotification from "@/components/ToastNotification.vue";
-import { useToasts } from "@/helpers/useToasts";
+import { useToasts } from "@/Helpers/useToasts";
 import { useVentasStore } from "@/stores/ventas";
-import { dateTimeText, formatPrice } from "@/helpers/Main";
+import { dateTimeText, formatPrice } from "@/Helpers/Main";
 import { 
     Calendar, 
     User, 
