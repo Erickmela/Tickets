@@ -136,7 +136,7 @@ const navItems = [
     {
         name: "Reportes",
         icon: BarChart3,
-        route: "/reportes",
+        route: "/admin/reportes",
         roles: ["ADMIN"],
     },
     {

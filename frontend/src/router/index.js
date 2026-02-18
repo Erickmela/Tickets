@@ -126,18 +126,12 @@ const router = createRouter({
       component: () => import('../views/Admin/Escaner/Index.vue'),
       meta: { requiresAuth: true, requiresRole: ['VALIDADOR', 'ADMIN'] }
     },
-    // {
-    //   path: '/validaciones',
-    //   name: 'validaciones',
-    //   component: () => import('@/views/validador/ValidacionesView.vue'),
-    //   meta: { requiresAuth: true, roles: ['VALIDADOR', 'ADMIN'] }
-    // },
-    // {
-    //   path: '/reportes',
-    //   name: 'reportes',
-    //   component: () => import('@/views/admin/ReportesView.vue'),
-    //   meta: { requiresAuth: true, roles: ['ADMIN'] }
-    // },
+    {
+      path: '/admin/reportes',
+      name: 'admin-reportes',
+      component: () => import('../views/Admin/Reportes/Index.vue'),
+      meta: { requiresAuth: true, requiresRole: ['ADMIN'] }
+    },
   ]
 })
 
