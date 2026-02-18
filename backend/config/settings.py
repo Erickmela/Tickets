@@ -16,20 +16,18 @@ load_dotenv(dotenv_path=env_path)
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,*').split(',')
 
 # Claves de encriptación para tickets (AES-256 + HMAC)
 # IMPORTANTE: Mantener estas claves secretas y no compartir
-# Las claves por defecto son SOLO para desarrollo/pruebas
-# En producción, genera claves únicas con: python -c "import secrets; print(secrets.token_hex(32))"
-TICKET_ENCRYPTION_KEY = os.getenv(
-    'TICKET_ENCRYPTION_KEY',
-    'a1b2c3d4e5f61234567890abcdef0123456789abcdef0123456789abcdef0123'  # DEFAULT: 64 chars hex (32 bytes)
-)
-TICKET_HMAC_KEY = os.getenv(
-    'TICKET_HMAC_KEY', 
-    'f2e1d0c9b8a76543210fedcba9876543210fedcba9876543210fedcba98765'  # DEFAULT: 64 chars hex (32 bytes)
-)
+# Deben estar definidas en el archivo .env
+# Para generar nuevas claves: python -c "import secrets; print(secrets.token_hex(32))"
+TICKET_ENCRYPTION_KEY = os.getenv('TICKET_ENCRYPTION_KEY')
+TICKET_HMAC_KEY = os.getenv('TICKET_HMAC_KEY')
+
+# Validar que las claves estén configuradas
+if not TICKET_ENCRYPTION_KEY or not TICKET_HMAC_KEY:
+    raise ValueError('TICKET_ENCRYPTION_KEY y TICKET_HMAC_KEY deben estar definidas en el archivo .env')
 
 # Application definition
 INSTALLED_APPS = [
@@ -152,22 +150,20 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://localhost:3000",
 ]
-
 CORS_ALLOW_CREDENTIALS = True
 
 # Session Configuration
-SESSION_COOKIE_SAMESITE = 'Lax'  # Permite cookies en solicitudes cross-origin básicas
-SESSION_COOKIE_SECURE = False  # True solo en producción con HTTPS
-SESSION_COOKIE_HTTPONLY = True  # Previene acceso JavaScript a la cookie
-SESSION_COOKIE_AGE = 86400  # 24 horas (en segundos)
-SESSION_SAVE_EVERY_REQUEST = True  # Renueva la sesión en cada petición
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # La sesión persiste al cerrar el navegador
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 86400
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # CSRF Configuration
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SECURE = False  # True solo en producción con HTTPS
+CSRF_COOKIE_SECURE = False
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
