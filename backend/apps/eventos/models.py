@@ -1,9 +1,50 @@
 """
 Modelos de Eventos y Zonas
 """
+
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
 
+class Categoria(models.Model):
+
+    """
+    Categoría de Evento
+    """
+    nombre = models.CharField('Nombre', max_length=100, unique=True)
+    slug = models.SlugField('Slug', max_length=120, unique=True)
+    imagen_path = models.ImageField('Imagen', upload_to='eventos/categorias/', blank=True, null=True)
+    estado = models.CharField('Estado', max_length=1, choices=[('1', 'Activo'), ('2', 'Desactivado')], default='1')
+    activo = models.BooleanField('Activo', default=True)
+    fecha_creacion = models.DateTimeField('Fecha de Creación', auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField('Última Actualización', auto_now=True)
+    class Meta:
+        verbose_name = 'Categoría'
+        verbose_name_plural = 'Categorías'
+        ordering = ['nombre']
+        
+    def __str__(self):
+        return self.nombre
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.nombre:
+            self.slug = slugify(self.nombre)
+        super().save(*args, **kwargs)
+
+class Presentacion(models.Model):
+    """
+    Presentación de un Evento (fecha y hora específica)
+    """
+    evento = models.ForeignKey('Evento', on_delete=models.CASCADE, related_name='presentaciones')
+    fecha = models.DateField('Fecha')
+    hora_inicio = models.TimeField('Hora de Inicio')
+    descripcion = models.CharField('Descripción', max_length=200, blank=True)
+    class Meta:
+        verbose_name = 'Presentación'
+        verbose_name_plural = 'Presentaciones'
+        ordering = ['evento', 'fecha', 'hora_inicio']
+    def __str__(self):
+        return f'{self.evento.nombre} - {self.fecha} {self.hora_inicio}'
 
 class Evento(models.Model):
     """
@@ -43,27 +84,13 @@ class Evento(models.Model):
         ('Callao', 'Callao'),
     ]
     
-    CATEGORIA_CHOICES = [
-        ('Música', 'Música'),
-        ('Deportes', 'Deportes'),
-        ('Teatro', 'Teatro'),
-        ('Conferencias', 'Conferencias'),
-        ('Festivales', 'Festivales'),
-        ('Gastronomía', 'Gastronomía'),
-        ('Infantiles', 'Infantiles'),
-        ('Otros', 'Otros'),
-    ]
-    
     nombre = models.CharField('Nombre', max_length=200, unique=True)
     descripcion = models.TextField('Descripción', blank=True)
-    categoria = models.CharField('Categoría', max_length=50, choices=CATEGORIA_CHOICES, default='Otros')
-    fecha = models.DateField('Fecha del Evento')
-    hora_inicio = models.TimeField('Hora de Inicio', null=True, blank=True)
+    categoria = models.ForeignKey('Categoria', on_delete=models.PROTECT, related_name='eventos')
     lugar = models.CharField('Lugar', max_length=300, blank=True, help_text='Dirección exacta del evento')
     region = models.CharField('Región', max_length=50, choices=REGION_CHOICES, default='Lima', help_text='Región donde se realiza el evento')
     estado = models.CharField('Estado', max_length=20, choices=ESTADO_CHOICES, default='1')
     activo = models.BooleanField('Activo', default=False, help_text='Solo un evento puede estar activo')
-    
     # Imágenes del evento
     imagen_principal = models.ImageField(
         'Imagen Principal',
@@ -100,72 +127,32 @@ class Evento(models.Model):
         null=True,
         help_text='Plano/mapa con la distribución de zonas del local (VIP, General, etc.)'
     )
-    
     fecha_creacion = models.DateTimeField('Fecha de Creación', auto_now_add=True)
     fecha_actualizacion = models.DateTimeField('Última Actualización', auto_now=True)
-    
     class Meta:
         verbose_name = 'Evento'
         verbose_name_plural = 'Eventos'
-        ordering = ['-fecha']
+        ordering = ['-fecha_creacion']
         indexes = [
-            models.Index(fields=['activo', 'fecha']),
+            models.Index(fields=['activo', 'fecha_creacion']),
         ]
-    
     def __str__(self):
-        return f'{self.nombre} - {self.fecha}'
-    
-    def clean(self):
-        """
-        Validación del modelo
-        Principio de validación centralizada
-        """
-        # Validaciones personalizadas si se necesitan en el futuro
-        pass
-    
-    def save(self, *args, **kwargs):
-        # Sincronizar campo activo con estado
-        self.activo = (self.estado == '2')
-        self.full_clean()
-        super().save(*args, **kwargs)
-    
+        return f'{self.nombre}'
+    def total_presentaciones(self):
+        return self.presentaciones.count()
     def total_zonas(self):
-        """Retorna el número de zonas del evento"""
-        return self.zonas.count()
-    
-    def capacidad_total(self):
-        """Retorna la capacidad total del evento"""
-        return self.zonas.aggregate(
-            total=models.Sum('capacidad_maxima')
-        )['total'] or 0
-    
-    def tickets_vendidos(self):
-        """Retorna el total de tickets vendidos para este evento"""
-        from apps.ventas.models import Ticket, EstadoTicket
-        return Ticket.objects.filter(
-            zona__evento=self,
-            estado=EstadoTicket.ACTIVO
-        ).count()
-    
-    def disponibilidad(self):
-        """Porcentaje de disponibilidad del evento"""
-        capacidad = self.capacidad_total()
-        if capacidad == 0:
-            return 0
-        vendidos = self.tickets_vendidos()
-        return round((1 - vendidos / capacidad) * 100, 2)
-
+        return sum(p.zonas.count() for p in self.presentaciones.all())
 
 class Zona(models.Model):
     """
     Modelo de Zona dentro de un Evento
     Responsabilidad: Gestionar capacidad y precio de una zona específica
     """
-    evento = models.ForeignKey(
-        Evento,
+    presentacion = models.ForeignKey(
+        Presentacion,
         on_delete=models.CASCADE,
         related_name='zonas',
-        verbose_name='Evento'
+        verbose_name='Presentación'
     )
     nombre = models.CharField('Nombre', max_length=100, help_text='Ej: VIP, General, Palco')
     descripcion = models.TextField('Descripción', blank=True)
@@ -175,54 +162,35 @@ class Zona(models.Model):
         help_text='Número máximo de personas en esta zona'
     )
     activo = models.BooleanField('Activo', default=True)
-    
     fecha_creacion = models.DateTimeField('Fecha de Creación', auto_now_add=True)
     fecha_actualizacion = models.DateTimeField('Última Actualización', auto_now=True)
     
     class Meta:
         verbose_name = 'Zona'
         verbose_name_plural = 'Zonas'
-        ordering = ['evento', 'precio']
-        unique_together = [['evento', 'nombre']]
+        ordering = ['presentacion', 'precio']
+        unique_together = [['presentacion', 'nombre']]
         indexes = [
-            models.Index(fields=['evento', 'activo']),
+            models.Index(fields=['presentacion', 'activo']),
         ]
-    
     def __str__(self):
-        return f'{self.evento.nombre} - {self.nombre} (S/ {self.precio})'
-    
+        return f'{self.presentacion} - {self.nombre} (S/ {self.precio})'
     def tickets_vendidos(self):
-        """
-        Retorna el número de tickets vendidos en esta zona
-        Responsabilidad única: contar tickets activos
-        """
         from apps.ventas.models import EstadoTicket
         return self.tickets.filter(estado=EstadoTicket.ACTIVO).count()
-    
     def tickets_disponibles(self):
-        """Retorna el número de tickets disponibles"""
         return self.capacidad_maxima - self.tickets_vendidos()
-    
     def tiene_disponibilidad(self, cantidad: int = 1) -> bool:
-        """
-        Verifica si hay disponibilidad para una cantidad de tickets
-        Encapsulación de lógica de negocio
-        """
         return self.tickets_disponibles() >= cantidad
-    
     def porcentaje_ocupacion(self):
-        """Retorna el porcentaje de ocupación de la zona"""
         if self.capacidad_maxima == 0:
             return 0
         return round((self.tickets_vendidos() / self.capacidad_maxima) * 100, 2)
-    
     def clean(self):
-        """Validación de capacidad"""
         if self.capacidad_maxima <= 0:
             raise ValidationError('La capacidad máxima debe ser mayor a 0')
         if self.precio < 0:
             raise ValidationError('El precio no puede ser negativo')
-    
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)

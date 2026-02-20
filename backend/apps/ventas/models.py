@@ -7,7 +7,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from apps.usuarios.models import Usuario, PerfilCliente
-from apps.eventos.models import Zona
+from apps.eventos.models import Zona, Presentacion
 
 
 class MetodoPago(models.TextChoices):
@@ -25,6 +25,39 @@ class EstadoTicket(models.TextChoices):
     USADO = 'USADO', 'Usado'
     ANULADO = 'ANULADO', 'Anulado'
 
+
+class Orden(models.Model):
+    cliente = models.ForeignKey(PerfilCliente, on_delete=models.PROTECT, related_name='ordenes')
+    fecha_orden = models.DateTimeField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    mp_payment_id = models.CharField(max_length=50, blank=True, null=True)
+    mp_status = models.CharField(max_length=50, blank=True, null=True)
+    mp_status_detail = models.CharField(max_length=100, blank=True, null=True)
+    mp_payment_method_id = models.CharField(max_length=50, blank=True, null=True)
+    mp_payment_type = models.CharField(max_length=50, blank=True, null=True)
+    mp_preference_id = models.CharField(max_length=50, blank=True, null=True)
+    mp_merchant_order_id = models.CharField(max_length=50, blank=True, null=True)
+    estado = models.CharField(max_length=20, default='pendiente')
+    observaciones = models.TextField(blank=True)
+    def __str__(self):
+        return f'Orden #{self.pk} - {self.cliente.nombre_completo}'
+
+class OrdenItem(models.Model):
+    orden = models.ForeignKey(Orden, on_delete=models.CASCADE, related_name='items')
+    zona = models.ForeignKey(Zona, on_delete=models.PROTECT)
+    cantidad = models.PositiveIntegerField(default=1)
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+
+class Carrito(models.Model):
+    cliente = models.ForeignKey(PerfilCliente, on_delete=models.CASCADE, related_name='carritos')
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+    activo = models.BooleanField(default=True)
+
+class CarritoItem(models.Model):
+    carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE, related_name='items')
+    zona = models.ForeignKey(Zona, on_delete=models.PROTECT)
+    cantidad = models.PositiveIntegerField(default=1)
 
 class Venta(models.Model):
     """
@@ -44,7 +77,6 @@ class Venta(models.Model):
         related_name='ventas',
         verbose_name='Cliente que Paga'
     )
-    
     fecha_venta = models.DateTimeField('Fecha de Venta', auto_now_add=True)
     total_pagado = models.DecimalField('Total Pagado', max_digits=10, decimal_places=2)
     metodo_pago = models.CharField(
@@ -59,9 +91,9 @@ class Venta(models.Model):
         blank=True,
         help_text='Número de operación bancaria o código de transacción'
     )
-    
     observaciones = models.TextField('Observaciones', blank=True)
     activo = models.BooleanField('Activo', default=True)
+    orden = models.ForeignKey(Orden, on_delete=models.SET_NULL, null=True, blank=True, related_name='ventas')
     
     class Meta:
         verbose_name = 'Venta'
@@ -104,6 +136,12 @@ class Ticket(models.Model):
         on_delete=models.CASCADE,
         related_name='tickets',
         verbose_name='Venta'
+    )
+    presentacion = models.ForeignKey(
+        Presentacion,
+        on_delete=models.PROTECT,
+        related_name='tickets',
+        verbose_name='Presentación'
     )
     zona = models.ForeignKey(
         Zona,

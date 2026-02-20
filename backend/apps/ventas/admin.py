@@ -36,7 +36,7 @@ class VentaAdmin(admin.ModelAdmin):
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'nombre_titular', 'dni_titular', 'zona', 'estado', 'codigo_uuid', 'fecha_creacion')
-    list_filter = ('estado', 'zona__evento', 'zona', 'fecha_creacion')
+    list_filter = ('estado', 'zona__presentacion__evento', 'zona__presentacion', 'zona', 'fecha_creacion')
     search_fields = ('dni_titular', 'nombre_titular', 'codigo_uuid')
     ordering = ('-fecha_creacion',)
     readonly_fields = ('codigo_uuid', 'qr_image', 'fecha_creacion', 'fecha_actualizacion')

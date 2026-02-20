@@ -5,7 +5,7 @@ from .models import Validacion
 @admin.register(Validacion)
 class ValidacionAdmin(admin.ModelAdmin):
     list_display = ('id', 'ticket', 'validador', 'fecha_hora_ingreso', 'get_titular', 'get_zona')
-    list_filter = ('fecha_hora_ingreso', 'validador', 'ticket__zona__evento')
+    list_filter = ('fecha_hora_ingreso', 'validador', 'ticket__zona__presentacion__evento')
     search_fields = ('ticket__dni_titular', 'ticket__nombre_titular', 'ticket__codigo_uuid')
     ordering = ('-fecha_hora_ingreso',)
     readonly_fields = ('ticket', 'validador', 'fecha_hora_ingreso', 'ip_address', 'dispositivo')

@@ -52,7 +52,7 @@ const updateValue = (value) => {
                                 : 'text-gray-700 dark:text-gray-300'
                         "
                     >
-                        Opción 1
+                        {{ option1Label }}
                     </span>
                 </slot>
             </div>
@@ -83,7 +83,7 @@ const updateValue = (value) => {
                                 : 'text-gray-700 dark:text-gray-300'
                         "
                     >
-                        Opción 2
+                        {{ option2Label }}
                     </span>
                 </slot>
             </div>

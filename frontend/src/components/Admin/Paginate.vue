@@ -71,7 +71,7 @@ const scrollUp = () => {
                         <button v-else @click="goToPage(item.value)" :class="[
                             'w-8 h-8 flex items-center justify-center text-sm rounded-lg transition-colors',
                             item.active
-                                ? 'bg-orange-600 text-white'
+                                ? 'bg-primary-600 text-white'
                                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                         ]">
                             {{ item.value }}

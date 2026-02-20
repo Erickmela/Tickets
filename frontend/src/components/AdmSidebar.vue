@@ -87,6 +87,12 @@ const navItems = [
         ],
     },
     {
+        name: "Categorias",
+        icon: CalendarDays,
+        route: "/admin/categorias",
+        roles: ["ADMIN"],
+    },
+    {
         name: "Eventos",
         icon: CalendarDays,
         route: "/admin/eventos",

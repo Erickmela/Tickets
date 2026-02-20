@@ -110,21 +110,21 @@ const remove = () => {
 
             <!-- botón eliminar -->
             <button type="button" @click="remove"
-                class="absolute top-2 right-2 p-1 bg-orange-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                class="absolute top-2 right-2 p-1 bg-primary-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                 <X class="w-5 h-5 text-white" />
             </button>
         </div>
 
         <!-- input file -->
         <div v-else
-            class="mt-1 flex items-center justify-center w-full aspect-video border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer transition-colors hover:border-orange-400 dark:hover:border-orange-400 dark:hover:bg-gray-700 hover:bg-gray-100">
+            class="mt-1 flex items-center justify-center w-full aspect-video border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer transition-colors hover:border-primary-400 dark:hover:border-primary-400 dark:hover:bg-gray-700 hover:bg-gray-100">
             <label class="flex flex-col items-center justify-center w-full h-full cursor-pointer">
                 <input type="file" class="hidden" :accept="accept.join(',')" @change="onChange" />
 
                 <ImagePlus class="w-8 h-8 text-gray-400 dark:text-gray-500" />
 
                 <p class="mt-2 text-sm text-gray-500">
-                    <span class="font-medium text-orange-600">Haz clic para subir</span>
+                    <span class="font-medium text-primary-600">Haz clic para subir</span>
                     o arrastra una imagen
                 </p>
 

@@ -60,7 +60,14 @@ const router = createRouter({
       name: 'mis-tickets',
       component: () => import('@/views/HomeView.vue'), 
       meta: { requiresAuth: true, requiresRole: ['CLIENTE'] }
-    },    {
+    },
+    {
+      path: '/admin/categorias',
+      name: 'admin-categorias',
+      component: () => import('../views/Admin/Categorias/Index.vue'),
+      meta: { requiresAuth: true, requiresRole: ['ADMIN', 'VENDEDOR'] }
+    },    
+    {
       path: '/admin/ventas',
       name: 'admin-ventas',
       component: () => import('../views/Admin/Ventas/Index.vue'),
