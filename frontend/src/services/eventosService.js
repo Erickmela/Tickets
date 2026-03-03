@@ -68,6 +68,15 @@ export const eventosService = {
   },
 
   /**
+   * Obtener eventos para select (solo id, encoded_id, nombre)
+   * Optimizado para formularios y dropdowns
+   */
+  async getEventosSelect() {
+    const response = await api.get('/eventos/eventos/select/')
+    return response.data
+  },
+
+  /**
    * Obtener estadísticas de un evento
    */
   async getEstadisticasEvento(eventoId) {
@@ -91,8 +100,25 @@ export const eventosService = {
   },
 
   /**
+   * Obtener presentaciones de un evento
+   * Para flujo: Evento → Presentación → Zona
+   */
+  async getPresentacionesByEvento(eventoId) {
+    const response = await api.get(`/eventos/eventos/${eventoId}/presentaciones/`)
+    return response.data
+  },
+
+  /**
+   * Obtener zonas de una presentación
+   * Para flujo: Evento → Presentación → Zona
+   */
+  async getZonasByPresentacion(presentacionId) {
+    const response = await api.get(`/eventos/eventos/presentaciones/${presentacionId}/zonas/`)
+    return response.data
+  },
+
+  /**
    * Obtener zonas disponibles de un evento específico
-   * @param {number} eventoId - ID del evento
    */
   async getZonasDisponibles(eventoId) {
     const response = await api.get('/eventos/zonas/zonas_disponibles/', {

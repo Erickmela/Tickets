@@ -2,6 +2,7 @@
 Servicios de negocio para Ventas y Tickets
 Aplicando Single Responsibility - Lógica de negocio separada
 """
+import sys
 import qrcode
 from io import BytesIO
 from datetime import datetime, timedelta
@@ -78,14 +79,6 @@ class VentaService:
         """
         Crea una venta completa con todos sus tickets
         Aplica transaccionalidad: si algo falla, se hace rollback completo
-        
-        ARQUITECTURA UNIFICADA:
-        - Al crear un cliente, se crea Usuario (rol=CLIENTE) + PerfilCliente vinculado
-        - Todos los usuarios tienen Usuario + PerfilCliente
-        - La diferencia está en el rol: CLIENTE vs ADMIN/VENDEDOR/VALIDADOR
-
-        Returns:
-            Venta creada con todos sus tickets
         """
         # Paso 1: Obtener o crear el cliente (Usuario + PerfilCliente)
         cliente_dni = datos_venta['cliente_dni']
@@ -169,44 +162,33 @@ class VentaService:
         )
         
         # Paso 4: Crear los tickets
-        tickets_creados = []
         for ticket_data in tickets_data:
-            try:
-                ticket = Ticket.objects.create(
-                    venta=venta,
-                    zona_id=ticket_data['zona_id'],
-                    dni_titular=ticket_data['dni_titular'],
-                    nombre_titular=ticket_data['nombre_titular']
-                )
-                
-                # Calcular validez dinámica del token basada en la fecha del evento
-                zona = Zona.objects.get(id=ticket_data['zona_id'])
-                evento = zona.evento
-                
-                if evento.fecha_evento:
-                    # Token válido hasta 7 días después del evento
-                    dias_hasta_evento = (evento.fecha_evento - datetime.now().date()).days
-                    validity_hours = max((dias_hasta_evento + 7) * 24, 24)  # Mínimo 24 horas
-                else:
-                    # Fallback: 1 año si no hay fecha configurada
-                    validity_hours = 8760
-                
-                # Generar QR code con ENCRIPTACIÓN AVANZADA (AES-256 + HMAC)
-                qr_file, token_encriptado = QRCodeService.generar_qr(
-                    codigo_uuid=ticket.codigo_uuid,
-                    ticket_id=ticket.id,
-                    usar_encriptacion=True,  # Activar encriptación para máxima seguridad
-                    validity_hours=validity_hours  # Validez dinámica basada en fecha del evento
-                )
-                
-                # Guardar QR y token encriptado
-                ticket.qr_image.save(f'{ticket.codigo_uuid}.png', qr_file, save=False)
-                ticket.token_encriptado = token_encriptado
-                ticket.save()
-                
-                tickets_creados.append(ticket)
-            except ValidationError as e:
-                # Si un ticket falla, la transacción completa se revierte
-                raise ValidationError(f'Error al crear ticket: {str(e)}')
+            # Crear ticket con presentacion_id y zona_id
+            ticket = Ticket.objects.create(
+                venta=venta,
+                presentacion_id=int(ticket_data['presentacion_id']),
+                zona_id=int(ticket_data['zona_id']),
+                dni_titular=ticket_data['dni_titular'],
+                nombre_titular=ticket_data['nombre_titular']
+            )
+            
+            # Generar QR code
+            if ticket.presentacion.fecha:
+                dias_hasta = (ticket.presentacion.fecha - datetime.now().date()).days
+                validity_hours = max((dias_hasta + 7) * 24, 24)
+            else:
+                validity_hours = 8760
+            
+            qr_file, token_encriptado = QRCodeService.generar_qr(
+                codigo_uuid=ticket.codigo_uuid,
+                ticket_id=ticket.id,
+                usar_encriptacion=True,
+                validity_hours=validity_hours
+            )
+            
+            # Actualizar SOLO QR y token (no tocar FK)
+            ticket.qr_image.save(f'{ticket.codigo_uuid}.png', qr_file, save=False)
+            ticket.token_encriptado = token_encriptado
+            ticket.save(update_fields=['qr_image', 'token_encriptado'])
         
         return venta

@@ -237,10 +237,13 @@ class ReportesService:
             if capacidad_total > 0:
                 ocupacion = round((tickets_vendidos / capacidad_total) * 100, 1)
             
+            # Obtener la primera presentación si existe
+            primera_presentacion = evento.presentaciones.first()
+            
             detalles.append({
                 'id': evento.id,
                 'nombre': evento.nombre,
-                'fecha': evento.fecha.isoformat(),
+                'fecha': primera_presentacion.fecha.isoformat() if primera_presentacion else None,
                 'vendidos': tickets_vendidos,
                 'disponibles': capacidad_total - tickets_vendidos,
                 'ocupacion': ocupacion,

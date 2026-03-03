@@ -53,6 +53,20 @@ export const useEventosStore = defineStore('eventos', () => {
     }
   }
 
+  async function fetchEventosSelect() {
+    loading.value = true
+    error.value = null
+    try {
+      const data = await eventosService.getEventosSelect()
+      return data
+    } catch (err) {
+      error.value = err.response?.data?.message || 'No hay eventos disponibles'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function fetchEventos(page = 1, pageSize = 10, search = '') {
     loading.value = true
     error.value = null
@@ -202,6 +216,38 @@ export const useEventosStore = defineStore('eventos', () => {
     }
   }
 
+  /**
+   * Obtener presentaciones de un evento
+   */
+  async function fetchPresentacionesByEvento(eventoId) {
+    try {
+      loading.value = true
+      const data = await eventosService.getPresentacionesByEvento(eventoId)
+      return data
+    } catch (err) {
+      error.value = 'Error al cargar las presentaciones'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Obtener zonas de una presentación
+   */
+  async function fetchZonasByPresentacion(presentacionId) {
+    try {
+      loading.value = true
+      const data = await eventosService.getZonasByPresentacion(presentacionId)
+      return data
+    } catch (err) {
+      error.value = 'Error al cargar las zonas'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     eventoActivo,
     eventosActivos,
@@ -214,6 +260,7 @@ export const useEventosStore = defineStore('eventos', () => {
     nombreEventoActivo,
     fetchEventoActivo,
     fetchEventosActivos,
+    fetchEventosSelect,
     fetchEventos,
     fetchEvento,
     createEvento,
@@ -221,6 +268,8 @@ export const useEventosStore = defineStore('eventos', () => {
     deleteEvento,
     fetchZonasDisponibles,
     fetchZonasByEvento,
+    fetchPresentacionesByEvento,
+    fetchZonasByPresentacion,
     createZona,
     updateZona,
     deleteZona,

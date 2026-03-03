@@ -5,6 +5,7 @@ import ToastNotification from '@/components/ToastNotification.vue';
 import { Search, User, QrCode, MapPin, Calendar, Hash, AlertCircle, Loader2, CheckCircle, XCircle, Clock, Ticket, CreditCard, DollarSign, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { ventasService } from '@/services/ventasService';
 import { useToasts } from '@/Helpers/useToasts';
+import { getMediaUrl } from '@/Helpers/mediaUrl';
 
 const toast = ref(null);
 const toastHelper = useToasts(toast);
@@ -137,18 +138,28 @@ const getEstadoIcon = (estado) => {
     return estado === 'ACTIVO' ? CheckCircle : estado === 'USADO' ? Clock : XCircle;
 };
 
+const formatFecha = (fecha) => {
+    return new Date(fecha).toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
 const qrImageUrl = computed(() => {
     if (ticketSeleccionado.value?.qr_image_url) {
         return ticketSeleccionado.value.qr_image_url;
     }
 
     if (ticketSeleccionado.value?.qr_image) {
-        const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
-        return `${baseUrl}/media/${ticketSeleccionado.value.qr_image}`;
+        return getMediaUrl(ticketSeleccionado.value.qr_image);
     }
 
     return null;
 });
+
 
 const formatFecha = (fecha) => {
     return new Date(fecha).toLocaleDateString('es-PE', {

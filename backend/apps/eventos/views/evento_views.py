@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Min
 from django.utils import timezone
 from datetime import timedelta
 
@@ -15,7 +15,8 @@ from apps.eventos.models import Evento, Zona
 from apps.eventos.serializers import (
     EventoSerializer, 
     EventoListSerializer, 
-    EventoCreateSerializer
+    EventoCreateSerializer,
+    EventoSelectSerializer
 )
 from apps.ventas.models import Venta, Ticket, EstadoTicket, MetodoPago
 from config.hashid_utils import decode_id
@@ -80,14 +81,34 @@ class EventoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def eventos_activos(self, request):
-        """Obtener todos los eventos activos"""
-        eventos = Evento.objects.filter(activo=True).order_by('-fecha', 'nombre')
+        """Obtener eventos próximos y activos (estado 1 o 2)"""
+        # Filtrar por estado '1' (Próximo) o '2' (Activo)
+        eventos = Evento.objects.filter(estado__in=['1', '2']).annotate(
+            primera_fecha=Min('presentaciones__fecha')
+        ).order_by('-primera_fecha', 'nombre')
+        
         if not eventos.exists():
             return Response(
-                {'message': 'No hay eventos activos'},
+                {'message': 'No hay eventos próximos o activos'},
                 status=status.HTTP_404_NOT_FOUND
             )
         serializer = EventoSerializer(eventos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='select')
+    def select_options(self, request):
+        """
+        Endpoint optimizado para selects
+        Retorna solo: id, encoded_id, nombre
+        Filtra solo eventos activos/próximos (estado 1 o 2)
+        """
+        eventos = Evento.objects.filter(
+            estado__in=['1', '2']
+        ).annotate(
+            primera_fecha=Min('presentaciones__fecha')
+        ).order_by('nombre')
+        
+        serializer = EventoSelectSerializer(eventos, many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['post'])
@@ -129,7 +150,6 @@ class EventoViewSet(viewsets.ModelViewSet):
             'evento': {
                 'id': evento.id,
                 'nombre': evento.nombre,
-                'fecha': evento.fecha,
                 'lugar': evento.lugar,
                 'estado': evento.get_estado_display()
             },
@@ -213,17 +233,67 @@ class EventoViewSet(viewsets.ModelViewSet):
                 'fecha_compra': ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M')
             })
         
+        # Obtener la primera presentación si existe
+        primera_presentacion = evento.presentaciones.first()
+        
         return Response({
             'evento': {
                 'nombre': evento.nombre,
-                'fecha': evento.fecha.strftime('%d/%m/%Y'),
-                'hora_inicio': evento.hora_inicio.strftime('%H:%M') if evento.hora_inicio else '-',
+                'fecha': primera_presentacion.fecha.strftime('%d/%m/%Y') if primera_presentacion else '-',
+                'hora_inicio': primera_presentacion.hora_inicio.strftime('%H:%M') if primera_presentacion else '-',
                 'lugar': evento.lugar,
                 'region': evento.region or '-'
             },
             'tickets': tickets_data,
             'total_tickets': len(tickets_data)
         })
+    
+    @action(detail=True, methods=['get'], url_path='presentaciones')
+    def presentaciones_evento(self, request, pk=None):
+        """
+        Obtener presentaciones de un evento
+        GET /api/eventos/{evento_id}/presentaciones/
+        """
+        evento = self.get_object()
+        from apps.eventos.models import Presentacion
+        
+        presentaciones = Presentacion.objects.filter(
+            evento=evento
+        ).order_by('fecha', 'hora_inicio')
+        
+        data = [{
+            'id': p.id,
+            'fecha': p.fecha,
+            'hora_inicio': p.hora_inicio,
+            'nombre_display': f"{p.fecha} - {p.hora_inicio}" if p.fecha else f"Presentación #{p.id}"
+        } for p in presentaciones]
+        
+        return Response(data)
+    
+    @action(detail=False, methods=['get'], url_path='presentaciones/(?P<presentacion_id>[^/.]+)/zonas')
+    def zonas_presentacion(self, request, presentacion_id=None):
+        """
+        Obtener zonas de una presentación
+        """
+        from apps.eventos.models import Presentacion, Zona
+        
+        presentacion = get_object_or_404(Presentacion, id=presentacion_id)
+        zonas = Zona.objects.filter(
+            presentacion=presentacion,
+            activo=True
+        ).order_by('nombre')
+        
+        data = [{
+            'id': z.id,
+            'nombre': z.nombre,
+            'precio': float(z.precio),
+            'capacidad_maxima': z.capacidad_maxima,
+            'tickets_vendidos': z.tickets_vendidos(),
+            'tickets_disponibles': z.tickets_disponibles(),
+            'tiene_disponibilidad': z.tiene_disponibilidad()
+        } for z in zonas]
+        
+        return Response(data)
     
     # Métodos privados auxiliares
     

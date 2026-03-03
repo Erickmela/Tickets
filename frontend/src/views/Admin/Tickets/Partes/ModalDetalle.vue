@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import DialogModal from '@/components/DialogModal.vue';
 import { X, QrCode, User, MapPin, Calendar, Hash } from 'lucide-vue-next';
+import { getMediaUrl } from '@/Helpers/mediaUrl';
 
 const props = defineProps({
     ticket: {
@@ -40,10 +41,8 @@ const qrImageUrl = computed(() => {
         return props.ticket.qr_image_url;
     }
     
-    // Fallback: construir URL manualmente desde qr_image
     if (props.ticket?.qr_image) {
-        const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
-        return `${baseUrl}/media/${props.ticket.qr_image}`;
+        return getMediaUrl(props.ticket.qr_image);
     }
     
     return null;
@@ -58,6 +57,7 @@ const qrImageUrl = computed(() => {
                     <div class="p-2 bg-[#B3224D] rounded-lg">
                         <QrCode class="w-5 h-5 text-white" />
                     </div>
+
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                             Detalles del Ticket

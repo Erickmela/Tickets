@@ -209,11 +209,8 @@ class Ticket(models.Model):
     def save(self, *args, **kwargs):
         """
         Override save para validaciones antes de guardar
-        Aplicando validaciones de negocio centralizadas
+        Las validaciones se hacen en el serializer
         """
-        if not self.pk:  # Solo en creación
-            self._validar_limite_titular()
-            self._validar_disponibilidad_zona()
         super().save(*args, **kwargs)
     
     def _validar_limite_titular(self):
@@ -221,10 +218,10 @@ class Ticket(models.Model):
         REGLA DE NEGOCIO: Máximo 3 tickets por titular por evento
         Previene acaparamiento de entradas
         """
-        evento = self.zona.evento
+        evento = self.zona.presentacion.evento
         tickets_titular = Ticket.objects.filter(
             dni_titular=self.dni_titular,
-            zona__evento=evento,
+            zona__presentacion__evento=evento,
             estado=EstadoTicket.ACTIVO
         ).count()
         

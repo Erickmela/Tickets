@@ -58,7 +58,6 @@ class ZonaListSerializer(serializers.ModelSerializer):
     tickets_vendidos = serializers.IntegerField(read_only=True)
     capacidad = serializers.IntegerField(source='capacidad_maxima')
     evento_nombre = serializers.CharField(source='evento.nombre', read_only=True)
-    evento_fecha = serializers.DateField(source='evento.fecha', read_only=True)
     evento_lugar = serializers.CharField(source='evento.lugar', read_only=True)
     
     class Meta:
@@ -66,7 +65,7 @@ class ZonaListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'encoded_id', 'nombre', 'descripcion', 'precio', 'capacidad', 
             'tickets_disponibles', 'tickets_vendidos', 'activo', 
-            'evento_nombre', 'evento_fecha', 'evento_lugar'
+            'evento_nombre', 'evento_lugar'
         ]
     
     def get_encoded_id(self, obj):

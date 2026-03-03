@@ -16,7 +16,7 @@ class TicketViewSet(viewsets.ReadOnlyModelViewSet):
     ViewSet para consulta de Tickets
     Responsabilidad: Solo lectura de tickets
     """
-    queryset = Ticket.objects.select_related('zona__evento').all()
+    queryset = Ticket.objects.select_related('zona__presentacion__evento', 'presentacion__evento', 'venta__vendedor', 'venta__cliente_pagador').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['dni_titular', 'nombre_titular', 'codigo_uuid']
@@ -48,7 +48,7 @@ class TicketViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        tickets = Ticket.objects.filter(zona__evento_id=evento_id)
+        tickets = Ticket.objects.filter(zona__presentacion__evento_id=evento_id)
         serializer = self.get_serializer(tickets, many=True)
         return Response(serializer.data)
     

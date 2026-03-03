@@ -164,6 +164,7 @@ class VentaService:
             try:
                 ticket = Ticket.objects.create(
                     venta=venta,
+                    presentacion_id=ticket_data['presentacion_id'],
                     zona_id=ticket_data['zona_id'],
                     dni_titular=ticket_data['dni_titular'],
                     nombre_titular=ticket_data['nombre_titular']
@@ -192,18 +193,17 @@ class VentaService:
     @staticmethod
     def _calcular_validez_token(ticket: Ticket) -> int:
         """
-        Calcular validez del token en horas basado en la fecha del evento
-        Token válido hasta 7 días después del evento
+        Calcular validez del token en horas basado en la fecha de la presentación
+        Token válido hasta 7 días después de la presentación
         """
-        zona = ticket.zona
-        evento = zona.evento
+        presentacion = ticket.presentacion
         
-        if evento.fecha:
-            # Token válido hasta 7 días después del evento
-            dias_hasta_evento = (evento.fecha - datetime.now().date()).days
-            validity_hours = max((dias_hasta_evento + 7) * 24, 24)  # Mínimo 24 horas
+        if presentacion and presentacion.fecha:
+            # Token válido hasta 7 días después de la presentación
+            dias_hasta = (presentacion.fecha - datetime.now().date()).days
+            validity_hours = max((dias_hasta + 7) * 24, 24)  # Mínimo 24 horas
         else:
-            # Fallback: 1 año si no hay fecha configurada
+            # Fallback: 1 año si no hay presentación
             validity_hours = 8760
         
         return validity_hours

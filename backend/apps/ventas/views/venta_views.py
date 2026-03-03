@@ -14,7 +14,7 @@ from apps.ventas.models import Venta
 from apps.ventas.serializers import (
     VentaSerializer, 
     VentaListSerializer, 
-    CrearVentaSerializer
+    VentaCreateSerializer
 )
 from apps.ventas.services import VentaService
 
@@ -99,7 +99,7 @@ class CrearVentaView(APIView):
         Crear una venta con múltiples tickets
         Aplica validaciones de negocio y transaccionalidad
         """
-        serializer = CrearVentaSerializer(data=request.data)
+        serializer = VentaCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         # Verificar que el usuario sea vendedor o admin

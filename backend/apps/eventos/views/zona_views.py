@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 
-from apps.eventos.models import Evento, Zona
+from apps.eventos.models import Evento, Zona, Presentacion
 from apps.eventos.serializers import ZonaSerializer, ZonaListSerializer
 from config.hashid_utils import decode_id
 
@@ -18,10 +18,10 @@ class ZonaViewSet(viewsets.ModelViewSet):
     ViewSet para gestión de Zonas
     Responsabilidad: CRUD de zonas con consultas de disponibilidad
     """
-    queryset = Zona.objects.select_related('evento').all()
+    queryset = Zona.objects.select_related('presentacion__evento').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['nombre', 'descripcion', 'evento__nombre']
+    search_fields = ['nombre', 'descripcion', 'presentacion__evento__nombre']
     
     def get_object(self):
         """Permitir búsqueda por ID o encoded_id"""
@@ -52,24 +52,29 @@ class ZonaViewSet(viewsets.ModelViewSet):
         """Filtrar zonas por evento si se proporciona"""
         queryset = super().get_queryset()
         evento_id = self.request.query_params.get('evento_id')
+        presentacion_id = self.request.query_params.get('presentacion_id')
         
         if evento_id:
+            # Filtrar por todas las presentaciones del evento
             decoded_id = decode_id(evento_id)
             lookup_id = decoded_id if decoded_id else evento_id
-            queryset = queryset.filter(evento_id=lookup_id)
+            queryset = queryset.filter(presentacion__evento_id=lookup_id)
+        
+        if presentacion_id:
+            # Filtrar por presentación específica
+            decoded_id = decode_id(presentacion_id)
+            lookup_id = decoded_id if decoded_id else presentacion_id
+            queryset = queryset.filter(presentacion_id=lookup_id)
         
         return queryset
     
     @action(detail=False, methods=['get'])
     def zonas_disponibles(self, request):
         """
-        Obtener solo las zonas con disponibilidad
-        
-        Parámetros:
-            - evento_id: ID del evento (requerido) o encoded_id
-            - debug: Si es '1', devuelve información de debug
+        Obtener solo las zonas con disponibilidad de todas las presentaciones de un evento
         """
         evento_id = request.query_params.get('evento_id')
+        presentacion_id = request.query_params.get('presentacion_id')
         
         if not evento_id:
             return Response(
@@ -77,20 +82,31 @@ class ZonaViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Decodificar ID
+        # Decodificar ID del evento
         decoded_id = decode_id(evento_id)
         lookup_id = decoded_id if decoded_id else evento_id
         
         try:
-            evento = Evento.objects.get(id=lookup_id, activo=True)
+            evento = Evento.objects.get(id=lookup_id)
         except Evento.DoesNotExist:
             return Response(
-                {'error': 'Evento no encontrado o no está activo'},
+                {'error': 'Evento no encontrado'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Obtener zonas activas
-        todas_zonas = Zona.objects.filter(evento=evento)
+        # Filtrar zonas de las presentaciones del evento
+        if presentacion_id:
+            # Filtrar por presentación específica
+            decoded_pres_id = decode_id(presentacion_id)
+            lookup_pres_id = decoded_pres_id if decoded_pres_id else presentacion_id
+            todas_zonas = Zona.objects.filter(
+                presentacion__evento=evento,
+                presentacion_id=lookup_pres_id
+            )
+        else:
+            # Todas las zonas de todas las presentaciones del evento
+            todas_zonas = Zona.objects.filter(presentacion__evento=evento)
+        
         zonas_activas = todas_zonas.filter(activo=True)
         
         # Información de debug

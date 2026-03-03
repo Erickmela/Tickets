@@ -138,10 +138,38 @@ class Evento(models.Model):
         ]
     def __str__(self):
         return f'{self.nombre}'
+    
     def total_presentaciones(self):
+        """Retornar el número total de presentaciones del evento"""
         return self.presentaciones.count()
+    
     def total_zonas(self):
+        """Retornar el número total de zonas de todas las presentaciones"""
         return sum(p.zonas.count() for p in self.presentaciones.all())
+    
+    def capacidad_total(self):
+        """Retornar la capacidad total de todas las zonas de todas las presentaciones"""
+        total = 0
+        for presentacion in self.presentaciones.all():
+            total += sum(z.capacidad_maxima for z in presentacion.zonas.all())
+        return total
+    
+    def tickets_vendidos(self):
+        """Retornar el número total de tickets vendidos para todas las presentaciones"""
+        from apps.ventas.models import EstadoTicket
+        total = 0
+        for presentacion in self.presentaciones.all():
+            for zona in presentacion.zonas.all():
+                total += zona.tickets.filter(estado=EstadoTicket.ACTIVO).count()
+        return total
+    
+    def disponibilidad(self):
+        """Retornar el porcentaje de disponibilidad del evento"""
+        capacidad = self.capacidad_total()
+        if capacidad == 0:
+            return 0
+        vendidos = self.tickets_vendidos()
+        return round(((capacidad - vendidos) / capacidad) * 100, 2)
 
 class Zona(models.Model):
     """

@@ -6,6 +6,10 @@ export const categoriasService = {
       params: { page, page_size: pageSize, search }
     }).then(r => r.data)
   },
+  getCategoriasSelect() {
+    // Endpoint optimizado para selects (solo ID y nombre de categorías activas)
+    return api.get('/eventos/categorias/select/').then(r => r.data)
+  },
   getCategoria(id) {
     return api.get(`/eventos/categorias/${id}/`).then(r => r.data)
   },
