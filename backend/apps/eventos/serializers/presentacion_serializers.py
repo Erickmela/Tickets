@@ -29,19 +29,26 @@ class PresentacionSerializer(serializers.ModelSerializer):
 
 class PresentacionSimpleSerializer(serializers.ModelSerializer):
     """
-    Serializer simplificado para Presentacion
+    Serializer simplificado para Presentacion con sus zonas
     Responsabilidad: Representación mínima para uso en otros serializers
     """
     fecha_hora_display = serializers.SerializerMethodField(read_only=True)
+    zonas = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = Presentacion
-        fields = ['id', 'fecha', 'hora_inicio', 'descripcion', 'fecha_hora_display']
+        fields = ['id', 'fecha', 'hora_inicio', 'descripcion', 'fecha_hora_display', 'zonas']
         read_only_fields = fields
     
     def get_fecha_hora_display(self, obj):
         """Formato legible de fecha y hora"""
         return f"{obj.fecha.strftime('%d/%m/%Y')} - {obj.hora_inicio.strftime('%H:%M')}"
+    
+    def get_zonas(self, obj):
+        """Obtener las zonas de esta presentación con información de disponibilidad"""
+        from .zona_serializers import ZonaDetalleSerializer
+        zonas = obj.zonas.filter(activo=True)
+        return ZonaDetalleSerializer(zonas, many=True).data
 
 
 class PresentacionListSerializer(serializers.ModelSerializer):

@@ -66,7 +66,7 @@ const navItems = [
         name: "Dashboard",
         icon: LayoutDashboard,
         route: "/dashboard",
-        roles: ["ADMIN", "VENDEDOR", "VALIDADOR"],
+        roles: ["ADMIN", "VENDEDOR"],
     },
     {
         name: "Usuarios",
@@ -118,7 +118,7 @@ const navItems = [
             {
                 name: "Validar Ticket",
                 route: "/validar",
-               roles: ["ADMIN", "VALIDADOR"],
+               roles: ["ADMIN"],
             },
             {
                 name: "Escáner QR",

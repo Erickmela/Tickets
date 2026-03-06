@@ -42,27 +42,6 @@ class ValidacionViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
     
     @action(detail=False, methods=['get'])
-    def mis_validaciones(self, request):
-        """Obtener validaciones del validador actual"""
-        validaciones = Validacion.objects.filter(validador=request.user)
-        serializer = ValidacionListSerializer(validaciones, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def por_evento(self, request):
-        """Obtener validaciones de un evento específico"""
-        evento_id = request.query_params.get('evento_id')
-        if not evento_id:
-            return Response(
-                {'error': 'evento_id es requerido'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        validaciones = Validacion.objects.filter(ticket__zona__evento_id=evento_id)
-        serializer = self.get_serializer(validaciones, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
     def estadisticas(self, request):
         """Obtener estadísticas de validaciones"""
         from django.db.models import Count

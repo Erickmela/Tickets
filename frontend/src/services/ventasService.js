@@ -30,22 +30,10 @@ export const ventasService = {
   },
 
   /**
-   * Obtener ventas del vendedor actual con paginación
-   * @param {number} page - Número de página
-   * @param {number} pageSize - Cantidad de elementos por página
-   */
-  async getMisVentas(page = 1, pageSize = 10) {
-    const response = await api.get('/ventas/ventas/mis_ventas/', {
-      params: { page, page_size: pageSize }
-    })
-    return response.data
-  },
-
-  /**
    * Obtener detalle de una venta
    */
-  async getVenta(ventaId) {
-    const response = await api.get(`/ventas/ventas/${ventaId}/`)
+  async getVenta(codigoVenta) {
+    const response = await api.get(`/ventas/ventas/${codigoVenta}/`)
     return response.data
   },
 
@@ -121,9 +109,51 @@ export const ventasService = {
   /**
    * Anular una venta
    */
-  async anularVenta(ventaId, motivo) {
-    const response = await api.post(`/ventas/ventas/${ventaId}/anular/`, {
+  async anularVenta(codigoVenta, motivo) {
+    const response = await api.post(`/ventas/ventas/${codigoVenta}/anular/`, {
       motivo
+    })
+    return response.data
+  },
+
+  // ========== COLA VIRTUAL ==========
+
+  /**
+   * Verificar si hay cola y unirse si es necesario
+   */
+  async checkQueue(eventoSlug) {
+    const response = await api.post('/ventas/ventas/check-queue/', {
+      evento_slug: eventoSlug
+    })
+    return response.data
+  },
+
+  /**
+   * Obtener posición actual en la cola
+   */
+  async checkQueuePosition(eventoSlug) {
+    const response = await api.get('/ventas/ventas/queue-position/', {
+      params: { evento_slug: eventoSlug }
+    })
+    return response.data
+  },
+
+  /**
+   * Salir de la cola
+   */
+  async leaveQueue(eventoSlug) {
+    const response = await api.post('/ventas/ventas/leave-queue/', {
+      evento_slug: eventoSlug
+    })
+    return response.data
+  },
+
+  /**
+   * Obtener estadísticas de la cola (solo ADMIN)
+   */
+  async getQueueStats(eventoSlug) {
+    const response = await api.get('/ventas/ventas/queue-stats/', {
+      params: { evento_slug: eventoSlug }
     })
     return response.data
   }

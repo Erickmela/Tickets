@@ -145,6 +145,15 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    # Throttling para proteger el servidor de sobrecarga
+    'DEFAULT_THROTTLE_CLASSES': [
+        'config.throttling.ClienteRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'cliente': '300/hour',   # 300 peticiones por hora para clientes (5 por minuto)
+        'compra': '30/hour',     # 30 compras por hora por cliente (suficiente para uso normal)
+        'anon': '100/hour',      # 100 peticiones por hora para anónimos
+    }
 }
 
 # CORS Configuration
@@ -173,3 +182,32 @@ CSRF_TRUSTED_ORIGINS = [
 # QR Code Configuration
 QR_CODE_DIR = 'qr_codes'
 QR_CODE_PATH = MEDIA_ROOT / QR_CODE_DIR
+
+# Redis Configuration (Cola Virtual)
+# En desarrollo: Redis local
+# En producción: Usar REDIS_URL del proveedor (Upstash, Redis Cloud, etc.)
+REDIS_URL = os.getenv('REDIS_URL')  # Ejemplo: redis://default:password@host:port
+if REDIS_URL:
+    # Producción - Parsear URL completa
+    import urllib.parse as urlparse
+    url = urlparse.urlparse(REDIS_URL)
+    REDIS_HOST = url.hostname
+    REDIS_PORT = url.port or 6379
+    REDIS_PASSWORD = url.password
+    REDIS_DB = 0
+else:
+    # Desarrollo - Redis local
+    REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+    REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+    REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)
+    REDIS_DB = int(os.getenv('REDIS_DB', 0))
+
+# MercadoPago Configuration
+MERCADOPAGO_ACCESS_TOKEN = os.getenv('MERCADOPAGO_ACCESS_TOKEN')
+MERCADOPAGO_PUBLIC_KEY = os.getenv('MERCADOPAGO_PUBLIC_KEY')
+MERCADOPAGO_WEBHOOK_SECRET = os.getenv('MERCADOPAGO_WEBHOOK_SECRET')
+MERCADOPAGO_STATEMENT_DESCRIPTOR = os.getenv('MERCADOPAGO_STATEMENT_DESCRIPTOR', 'TICKETS')
+
+# URLs para callbacks de MercadoPago
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')

@@ -22,8 +22,8 @@ export const eventosService = {
   /**
    * Obtener un evento específico
    */
-  async getEvento(id) {
-    const response = await api.get(`/eventos/eventos/${id}/`)
+  async getEvento(slug) {
+    const response = await api.get(`/eventos/eventos/${slug}/`)
     return response.data
   },
 
@@ -38,24 +38,16 @@ export const eventosService = {
   /**
    * Actualizar un evento
    */
-  async updateEvento(id, eventoData) {
-    const response = await api.put(`/eventos/eventos/${id}/`, eventoData)
+  async updateEvento(slug, eventoData) {
+    const response = await api.put(`/eventos/eventos/${slug}/`, eventoData)
     return response.data
   },
 
   /**
    * Eliminar un evento
    */
-  async deleteEvento(id) {
-    const response = await api.delete(`/eventos/eventos/${id}/`)
-    return response.data
-  },
-
-  /**
-   * Obtener el evento activo (endpoint legacy)
-   */
-  async getEventoActivo() {
-    const response = await api.get('/eventos/eventos/evento_activo/')
+  async deleteEvento(slug) {
+    const response = await api.delete(`/eventos/eventos/${slug}/`)
     return response.data
   },
 
@@ -64,6 +56,15 @@ export const eventosService = {
    */
   async getEventosActivos() {
     const response = await api.get('/eventos/eventos/eventos_activos/')
+    return response.data
+  },
+
+  /**
+   * Obtener eventos para landing page (optimizado)
+   * Solo retorna campos esenciales para las tarjetas de eventos
+   */
+  async getEventosLanding() {
+    const response = await api.get('/eventos/eventos/eventos-landing/')
     return response.data
   },
 
@@ -79,8 +80,8 @@ export const eventosService = {
   /**
    * Obtener estadísticas de un evento
    */
-  async getEstadisticasEvento(eventoId) {
-    const response = await api.get(`/eventos/eventos/${eventoId}/estadisticas/`)
+  async getEstadisticasEvento(eventoSlug) {
+    const response = await api.get(`/eventos/eventos/${eventoSlug}/estadisticas/`)
     return response.data
   },
 
@@ -96,24 +97,6 @@ export const eventosService = {
         search
       }
     })
-    return response.data
-  },
-
-  /**
-   * Obtener presentaciones de un evento
-   * Para flujo: Evento → Presentación → Zona
-   */
-  async getPresentacionesByEvento(eventoId) {
-    const response = await api.get(`/eventos/eventos/${eventoId}/presentaciones/`)
-    return response.data
-  },
-
-  /**
-   * Obtener zonas de una presentación
-   * Para flujo: Evento → Presentación → Zona
-   */
-  async getZonasByPresentacion(presentacionId) {
-    const response = await api.get(`/eventos/eventos/presentaciones/${presentacionId}/zonas/`)
     return response.data
   },
 
@@ -138,42 +121,24 @@ export const eventosService = {
   /**
    * Actualizar una zona
    */
-  async updateZona(id, zonaData) {
-    const response = await api.put(`/eventos/zonas/${id}/`, zonaData)
+  async updateZona(codigo, zonaData) {
+    const response = await api.put(`/eventos/zonas/${codigo}/`, zonaData)
     return response.data
   },
 
   /**
    * Eliminar una zona
    */
-  async deleteZona(id) {
-    const response = await api.delete(`/eventos/zonas/${id}/`)
-    return response.data
-  },
-
-  /**
-   * Verificar disponibilidad de una zona
-   */
-  async verificarDisponibilidad(zonaId, cantidad) {
-    const response = await api.get(`/eventos/zonas/${zonaId}/disponibilidad/`, {
-      params: { cantidad }
-    })
-    return response.data
-  },
-
-  /**
-   * Obtener estadísticas completas del evento para dashboard
-   */
-  async getEstadisticasEvento(eventoId) {
-    const response = await api.get(`/eventos/eventos/${eventoId}/estadisticas/`)
+  async deleteZona(codigo) {
+    const response = await api.delete(`/eventos/zonas/${codigo}/`)
     return response.data
   },
 
   /**
    * Obtener evolución de ventas de los últimos días
    */
-  async getEvolucionVentas(eventoId, dias = 7) {
-    const response = await api.get(`/eventos/eventos/${eventoId}/evolucion_ventas/`, {
+  async getEvolucionVentas(eventoSlug, dias = 7) {
+    const response = await api.get(`/eventos/eventos/${eventoSlug}/evolucion_ventas/`, {
       params: { dias }
     })
     return response.data
@@ -182,8 +147,8 @@ export const eventosService = {
   /**
    * Obtener todos los tickets del evento para generar reporte
    */
-  async getTicketsReporte(eventoId) {
-    const response = await api.get(`/eventos/eventos/${eventoId}/tickets_reporte/`)
+  async getTicketsReporte(eventoSlug) {
+    const response = await api.get(`/eventos/eventos/${eventoSlug}/tickets_reporte/`)
     return response.data
   }
 }

@@ -133,51 +133,6 @@ export const reportesService = {
     link.remove()
     
     return response.data
-  },
-
-  /**
-   * Obtener métricas en tiempo real
-   */
-  async getMetricasEnVivo(evento_id = null) {
-    const params = evento_id ? { evento_id } : {}
-    const response = await api.get('/reportes/metricas-vivo/', { params })
-    return response.data
-  },
-
-  /**
-   * Obtener comparativa entre eventos
-   */
-  async getComparativaEventos(evento_ids = []) {
-    const response = await api.post('/reportes/comparativa-eventos/', {
-      evento_ids
-    })
-    return response.data
-  },
-
-  /**
-   * Obtener reporte de métodos de pago
-   */
-  async getReportePagos(filtros = {}) {
-    const params = {
-      fecha_inicio: filtros.fecha_inicio || null,
-      fecha_fin: filtros.fecha_fin || null,
-    }
-
-    Object.keys(params).forEach(key => {
-      if (params[key] === null) delete params[key]
-    })
-
-    const response = await api.get('/reportes/metodos-pago/', { params })
-    return response.data
-  },
-
-  /**
-   * Obtener análisis de zonas más vendidas
-   */
-  async getAnalisisZonas(evento_id = null) {
-    const params = evento_id ? { evento_id } : {}
-    const response = await api.get('/reportes/analisis-zonas/', { params })
-    return response.data
   }
 }
 

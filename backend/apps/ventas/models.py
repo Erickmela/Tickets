@@ -64,6 +64,15 @@ class Venta(models.Model):
     Modelo de Venta (Transacción)
     Responsabilidad: Registrar la transacción comercial
     """
+    # Código único para URLs (seguridad)
+    codigo_venta = models.UUIDField(
+        'Código de Venta',
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        help_text='Código único de la venta para URLs seguras'
+    )
+    
     vendedor = models.ForeignKey(
         Usuario,
         on_delete=models.PROTECT,
@@ -151,13 +160,22 @@ class Ticket(models.Model):
     )
     
     # Información del Titular (persona que ingresará con este ticket)
+    # OPCIONAL: Se completa al momento de validar el ingreso, no en la compra
     dni_titular = models.CharField(
         'DNI del Titular',
         max_length=8,
         validators=[dni_validator],
-        help_text='DNI de la persona que usará este ticket'
+        blank=True,
+        null=True,
+        help_text='DNI de la persona que usará este ticket (se completa al ingresar al evento)'
     )
-    nombre_titular = models.CharField('Nombre del Titular', max_length=200)
+    nombre_titular = models.CharField(
+        'Nombre del Titular',
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text='Nombre de la persona que usará este ticket (se completa al ingresar al evento)'
+    )
     
     # SEGURIDAD ANTI-CLONACIÓN: UUID4
     codigo_uuid = models.UUIDField(
@@ -204,7 +222,8 @@ class Ticket(models.Model):
         ]
     
     def __str__(self):
-        return f'Ticket #{self.pk} - {self.nombre_titular} - {self.zona.nombre}'
+        titular = self.nombre_titular or 'Sin asignar'
+        return f'Ticket #{self.pk} - {titular} - {self.zona.nombre}'
     
     def save(self, *args, **kwargs):
         """

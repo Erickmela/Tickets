@@ -124,11 +124,11 @@ export const useEventosStore = defineStore('eventos', () => {
     }
   }
 
-  async function deleteEvento(id) {
+  async function deleteEvento(slug) {
     loading.value = true
     error.value = null
     try {
-      await eventosService.deleteEvento(id)
+      await eventosService.deleteEvento(slug)
     } catch (err) {
       error.value = 'Error al eliminar el evento'
       throw err

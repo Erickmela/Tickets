@@ -10,31 +10,22 @@ from django.shortcuts import get_object_or_404
 
 from apps.eventos.models import Evento, Zona, Presentacion
 from apps.eventos.serializers import ZonaSerializer, ZonaListSerializer
-from config.hashid_utils import decode_id
+
 
 
 class ZonaViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gestión de Zonas
     Responsabilidad: CRUD de zonas con consultas de disponibilidad
+    Optimizado con select_related para evitar N+1 queries
     """
-    queryset = Zona.objects.select_related('presentacion__evento').all()
+    queryset = Zona.objects.select_related(
+        'presentacion__evento'
+    ).all()
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'presentacion__evento__nombre']
-    
-    def get_object(self):
-        """Permitir búsqueda por ID o encoded_id"""
-        lookup_value = self.kwargs.get('pk')
-        decoded_id = decode_id(lookup_value)
-        
-        if decoded_id:
-            return get_object_or_404(self.queryset, pk=decoded_id)
-        
-        try:
-            return get_object_or_404(self.queryset, pk=int(lookup_value))
-        except (ValueError, TypeError):
-            return super().get_object()
+    lookup_field = 'codigo'  # Usar código UUID en lugar de ID numérico
     
     def get_permissions(self):
         """Permisos según acción - público para consultas, autenticado para cambios"""
@@ -56,15 +47,11 @@ class ZonaViewSet(viewsets.ModelViewSet):
         
         if evento_id:
             # Filtrar por todas las presentaciones del evento
-            decoded_id = decode_id(evento_id)
-            lookup_id = decoded_id if decoded_id else evento_id
-            queryset = queryset.filter(presentacion__evento_id=lookup_id)
+            queryset = queryset.filter(presentacion__evento_id=evento_id)
         
         if presentacion_id:
             # Filtrar por presentación específica
-            decoded_id = decode_id(presentacion_id)
-            lookup_id = decoded_id if decoded_id else presentacion_id
-            queryset = queryset.filter(presentacion_id=lookup_id)
+            queryset = queryset.filter(presentacion_id=presentacion_id)
         
         return queryset
     
@@ -82,12 +69,8 @@ class ZonaViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Decodificar ID del evento
-        decoded_id = decode_id(evento_id)
-        lookup_id = decoded_id if decoded_id else evento_id
-        
         try:
-            evento = Evento.objects.get(id=lookup_id)
+            evento = Evento.objects.get(id=evento_id)
         except Evento.DoesNotExist:
             return Response(
                 {'error': 'Evento no encontrado'},
@@ -97,11 +80,9 @@ class ZonaViewSet(viewsets.ModelViewSet):
         # Filtrar zonas de las presentaciones del evento
         if presentacion_id:
             # Filtrar por presentación específica
-            decoded_pres_id = decode_id(presentacion_id)
-            lookup_pres_id = decoded_pres_id if decoded_pres_id else presentacion_id
             todas_zonas = Zona.objects.filter(
                 presentacion__evento=evento,
-                presentacion_id=lookup_pres_id
+                presentacion_id=presentacion_id
             )
         else:
             # Todas las zonas de todas las presentaciones del evento
@@ -128,19 +109,6 @@ class ZonaViewSet(viewsets.ModelViewSet):
             })
         
         return Response(serializer.data)
-    
-    @action(detail=True, methods=['get'])
-    def disponibilidad(self, request, pk=None):
-        """Verificar disponibilidad de una zona"""
-        zona = self.get_object()
-        cantidad = int(request.query_params.get('cantidad', 1))
-        
-        return Response({
-            'zona': zona.nombre,
-            'disponible': zona.tiene_disponibilidad(cantidad),
-            'tickets_disponibles': zona.tickets_disponibles(),
-            'tickets_solicitados': cantidad
-        })
     
     # Método privado auxiliar
     

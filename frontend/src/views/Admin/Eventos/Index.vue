@@ -122,9 +122,7 @@ const crearEvento = () => {
 
 // Navegar a editar evento
 const editarEvento = (data) => {
-    // Usar encoded_id si está disponible, si no usar id
-    const slug = data.encoded_id || data.id;
-    router.push({ name: 'admin-eventos-editar', params: { slug } });
+    router.push({ name: 'admin-eventos-editar', params: { slug: data.slug } });
 };
 
 // Modal Eliminar
@@ -140,9 +138,7 @@ const closeModalEliminar = () => {
 
 // Navegar a zonas del evento
 const verZonas = (evento) => {
-    // Usar encoded_id si está disponible, si no usar id
-    const slug = evento.encoded_id || evento.id;
-    router.push(`/admin/eventos/${slug}/zonas`);
+    router.push(`/admin/eventos/${evento.slug}/zonas`);
 };
 </script>
 

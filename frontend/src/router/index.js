@@ -20,6 +20,30 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
+      path: '/eventos/:slug',
+      name: 'evento-detalle',
+      component: () => import('@/views/Eventos/DetalleEvento.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/carrito',
+      name: 'carrito',
+      component: () => import('@/views/Carrito/Index.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/checkout',
+      name: 'checkout',
+      component: () => import('@/views/Carrito/Checkout.vue'),
+      meta: { requiresAuth: true, requiresRole: ['CLIENTE'] }
+    },
+    {
+      path: '/pago-resultado',
+      name: 'pago-resultado',
+      component: () => import('@/views/Carrito/PagoResultado.vue'),
+      meta: { requiresAuth: true, requiresRole: ['CLIENTE'] }
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/Auth/ClienteLogin.vue'),
@@ -41,13 +65,13 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/views/Admin/Dashboard/Index.vue'),
-      meta: { requiresAuth: true, requiresRole: ['ADMIN', 'VENDEDOR', 'VALIDADOR'] }
+      meta: { requiresAuth: true, requiresRole: ['ADMIN', 'VENDEDOR'] }
     },
     {
       path: '/admin/dashboard',
       name: 'admin-dashboard',
       component: () => import('@/views/Admin/Dashboard/Index.vue'),
-      meta: { requiresAuth: true, requiresRole: ['ADMIN', 'VENDEDOR', 'VALIDADOR'] }
+      meta: { requiresAuth: true, requiresRole: ['ADMIN', 'VENDEDOR'] }
     },
     {
       path: '/completar-perfil',
@@ -153,6 +177,13 @@ router.beforeEach(async (to, from, next) => {
   
   // Si la ruta es solo para guests y el usuario está autenticado
   if (to.meta.guestOnly && authStore.isAuthenticated) {
+    // Verificar si hay redirección guardada
+    const redirectPath = sessionStorage.getItem('redirectAfterLogin')
+    if (redirectPath) {
+      sessionStorage.removeItem('redirectAfterLogin')
+      return next(redirectPath)
+    }
+    
     // Redirigir según el rol del usuario
     if (authStore.userRole === 'CLIENTE') {
       // Verificar si necesita completar perfil
@@ -160,8 +191,13 @@ router.beforeEach(async (to, from, next) => {
       if (!user.nombre_completo || !user.telefono) {
         return next({ name: 'completar-perfil' })
       }
-      return next({ name: 'mis-tickets' })
+      // Cliente con perfil completo: redirigir al home (landing page)
+      return next({ name: 'home' })
+    } else if (authStore.userRole === 'VALIDADOR') {
+      // VALIDADORES van directo al escáner
+      return next({ name: 'admin-escaner' })
     } else {
+      // ADMIN y VENDEDOR van al dashboard
       return next({ name: 'admin-dashboard' })
     }
   }
@@ -181,11 +217,19 @@ router.beforeEach(async (to, from, next) => {
     if (!to.meta.requiresRole.includes(authStore.userRole)) {
       // Usuario sin permisos para esta ruta
       if (authStore.userRole === 'CLIENTE') {
-        return next({ name: 'mis-tickets' })
+        // Cliente sin permisos: redirigir al home (landing page)
+        return next({ name: 'home' })
+      } else if (authStore.userRole === 'VALIDADOR') {
+        return next({ name: 'admin-escaner' })
       } else {
         return next({ name: 'admin-dashboard' })
       }
     }
+  }
+  
+  // Bloquear acceso de VALIDADORES al dashboard - redirigir al escáner
+  if (authStore.userRole === 'VALIDADOR' && (to.name === 'dashboard' || to.name === 'admin-dashboard')) {
+    return next({ name: 'admin-escaner' })
   }
   
   // Verificar si el cliente necesita completar su perfil
@@ -199,6 +243,15 @@ router.beforeEach(async (to, from, next) => {
     // Si falta nombre_completo o teléfono, redirigir a completar perfil
     if (!user.nombre_completo || !user.telefono) {
       return next({ name: 'completar-perfil' })
+    }
+  }
+  
+  // Si el usuario llega al home y hay un redirect guardado, redirigir
+  if (to.path === '/' && authStore.isAuthenticated) {
+    const redirectPath = sessionStorage.getItem('redirectAfterLogin')
+    if (redirectPath) {
+      sessionStorage.removeItem('redirectAfterLogin')
+      return next(redirectPath)
     }
   }
   

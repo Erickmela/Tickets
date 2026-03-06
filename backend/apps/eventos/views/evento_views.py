@@ -15,35 +15,29 @@ from apps.eventos.models import Evento, Zona
 from apps.eventos.serializers import (
     EventoSerializer, 
     EventoListSerializer, 
+    EventoLandingSerializer,
     EventoCreateSerializer,
     EventoSelectSerializer
 )
 from apps.ventas.models import Venta, Ticket, EstadoTicket, MetodoPago
-from config.hashid_utils import decode_id
 
 
 class EventoViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gestión de Eventos
     Responsabilidad: CRUD de eventos con endpoints especializados
+    Optimizado con select_related y prefetch_related para reducir queries
     """
-    queryset = Evento.objects.all()
+    queryset = Evento.objects.select_related(
+        'categoria'
+    ).prefetch_related(
+        'presentaciones',
+        'presentaciones__zonas'
+    ).all()
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'lugar']
-    
-    def get_object(self):
-        """Permitir búsqueda por ID o encoded_id"""
-        lookup_value = self.kwargs.get('pk')
-        decoded_id = decode_id(lookup_value)
-        
-        if decoded_id:
-            return get_object_or_404(self.queryset, pk=decoded_id)
-        
-        try:
-            return get_object_or_404(self.queryset, pk=int(lookup_value))
-        except (ValueError, TypeError):
-            return super().get_object()
+    lookup_field = 'slug'  # Usar slug en lugar de ID numérico
     
     def get_permissions(self):
         """Permisos según acción - público para consultas, autenticado para cambios"""
@@ -58,26 +52,6 @@ class EventoViewSet(viewsets.ModelViewSet):
         elif self.action in ['create', 'update', 'partial_update']:
             return EventoCreateSerializer
         return EventoSerializer
-    
-    @action(detail=False, methods=['get'])
-    def evento_activo(self, request):
-        """
-        Obtener el evento activo actual (endpoint legacy)
-        DEPRECATED: Use eventos_activos para obtener todos los eventos activos
-        """
-        try:
-            evento = Evento.objects.get(activo=True)
-            serializer = EventoSerializer(evento)
-            return Response(serializer.data)
-        except Evento.DoesNotExist:
-            return Response(
-                {'message': 'No hay eventos activos'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Evento.MultipleObjectsReturned:
-            evento = Evento.objects.filter(activo=True).first()
-            serializer = EventoSerializer(evento)
-            return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def eventos_activos(self, request):
@@ -95,6 +69,29 @@ class EventoViewSet(viewsets.ModelViewSet):
         serializer = EventoSerializer(eventos, many=True)
         return Response(serializer.data)
     
+    @action(detail=False, methods=['get'], url_path='eventos-landing')
+    def eventos_landing(self, request):
+        """
+        Endpoint optimizado para landing page
+        Retorna solo campos esenciales: id, nombre, categoría, lugar, imagen_principal, fecha, precio_desde
+        """
+        # Filtrar por estado '1' (Próximo) o '2' (Activo)
+        eventos = Evento.objects.filter(estado__in=['1', '2']).prefetch_related(
+            'presentaciones',
+            'presentaciones__zonas'
+        ).annotate(
+            primera_fecha=Min('presentaciones__fecha')
+        ).order_by('-primera_fecha', 'nombre')
+        
+        if not eventos.exists():
+            return Response(
+                {'message': 'No hay eventos disponibles'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = EventoLandingSerializer(eventos, many=True)
+        return Response(serializer.data)
+    
     @action(detail=False, methods=['get'], url_path='select')
     def select_options(self, request):
         """
@@ -110,15 +107,6 @@ class EventoViewSet(viewsets.ModelViewSet):
         
         serializer = EventoSelectSerializer(eventos, many=True)
         return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'])
-    def activar(self, request, pk=None):
-        """Activar un evento"""
-        evento = self.get_object()
-        evento.estado = '2'  # ACTIVO
-        evento.activo = True
-        evento.save()
-        return Response({'status': 'Evento activado correctamente'})
     
     @action(detail=True, methods=['get'])
     def estadisticas(self, request, pk=None):
@@ -247,53 +235,6 @@ class EventoViewSet(viewsets.ModelViewSet):
             'tickets': tickets_data,
             'total_tickets': len(tickets_data)
         })
-    
-    @action(detail=True, methods=['get'], url_path='presentaciones')
-    def presentaciones_evento(self, request, pk=None):
-        """
-        Obtener presentaciones de un evento
-        GET /api/eventos/{evento_id}/presentaciones/
-        """
-        evento = self.get_object()
-        from apps.eventos.models import Presentacion
-        
-        presentaciones = Presentacion.objects.filter(
-            evento=evento
-        ).order_by('fecha', 'hora_inicio')
-        
-        data = [{
-            'id': p.id,
-            'fecha': p.fecha,
-            'hora_inicio': p.hora_inicio,
-            'nombre_display': f"{p.fecha} - {p.hora_inicio}" if p.fecha else f"Presentación #{p.id}"
-        } for p in presentaciones]
-        
-        return Response(data)
-    
-    @action(detail=False, methods=['get'], url_path='presentaciones/(?P<presentacion_id>[^/.]+)/zonas')
-    def zonas_presentacion(self, request, presentacion_id=None):
-        """
-        Obtener zonas de una presentación
-        """
-        from apps.eventos.models import Presentacion, Zona
-        
-        presentacion = get_object_or_404(Presentacion, id=presentacion_id)
-        zonas = Zona.objects.filter(
-            presentacion=presentacion,
-            activo=True
-        ).order_by('nombre')
-        
-        data = [{
-            'id': z.id,
-            'nombre': z.nombre,
-            'precio': float(z.precio),
-            'capacidad_maxima': z.capacidad_maxima,
-            'tickets_vendidos': z.tickets_vendidos(),
-            'tickets_disponibles': z.tickets_disponibles(),
-            'tiene_disponibilidad': z.tiene_disponibilidad()
-        } for z in zonas]
-        
-        return Response(data)
     
     # Métodos privados auxiliares
     

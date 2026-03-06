@@ -1,7 +1,7 @@
 """
 Modelos de Eventos y Zonas
 """
-
+import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
@@ -35,14 +35,28 @@ class Presentacion(models.Model):
     """
     Presentación de un Evento (fecha y hora específica)
     """
+    # Código único para URLs (seguridad)
+    codigo = models.UUIDField(
+        'Código',
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        help_text='Código único de la presentación para URLs seguras'
+    )
+    
     evento = models.ForeignKey('Evento', on_delete=models.CASCADE, related_name='presentaciones')
     fecha = models.DateField('Fecha')
     hora_inicio = models.TimeField('Hora de Inicio')
     descripcion = models.CharField('Descripción', max_length=200, blank=True)
+    
     class Meta:
         verbose_name = 'Presentación'
         verbose_name_plural = 'Presentaciones'
         ordering = ['evento', 'fecha', 'hora_inicio']
+        indexes = [
+            models.Index(fields=['codigo']),
+        ]
+    
     def __str__(self):
         return f'{self.evento.nombre} - {self.fecha} {self.hora_inicio}'
 
@@ -176,6 +190,15 @@ class Zona(models.Model):
     Modelo de Zona dentro de un Evento
     Responsabilidad: Gestionar capacidad y precio de una zona específica
     """
+    # Código único para URLs (seguridad)
+    codigo = models.UUIDField(
+        'Código',
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        help_text='Código único de la zona para URLs seguras'
+    )
+    
     presentacion = models.ForeignKey(
         Presentacion,
         on_delete=models.CASCADE,
@@ -200,6 +223,7 @@ class Zona(models.Model):
         unique_together = [['presentacion', 'nombre']]
         indexes = [
             models.Index(fields=['presentacion', 'activo']),
+            models.Index(fields=['codigo']),
         ]
     def __str__(self):
         return f'{self.presentacion} - {self.nombre} (S/ {self.precio})'

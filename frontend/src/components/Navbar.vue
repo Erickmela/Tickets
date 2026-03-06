@@ -81,6 +81,21 @@
                     </svg>
                 </button>
 
+                <!-- Carrito de compras -->
+                <RouterLink
+                    to="/carrito"
+                    class="relative p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    aria-label="Ver carrito de compras"
+                >
+                    <ShoppingCart :size="20" :stroke-width="2" />
+                    <span
+                        v-if="cartCount > 0"
+                        class="absolute -top-1 -right-1 bg-[#B3224D] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                    >
+                        {{ cartCount }}
+                    </span>
+                </RouterLink>
+
                 <div class="hidden lg:block border-r border-gray-300 dark:border-gray-700 pr-2 h-6 mr-2"></div>
 
                 <!-- Desktop Auth -->
@@ -315,6 +330,8 @@
 import { computed, ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { ShoppingCart } from 'lucide-vue-next'
+import { cartCount } from '@/Helpers/cartState'
 
 const router = useRouter()
 const authStore = useAuthStore()

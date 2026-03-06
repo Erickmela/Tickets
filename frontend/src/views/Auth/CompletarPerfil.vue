@@ -51,9 +51,9 @@ const submit = async () => {
         // Actualizar datos en authStore
         await authStore.refreshUser();
 
-        // Redirigir al landing page
+        // Redirigir - el router guard maneja la redirección guardada
         setTimeout(() => {
-            router.push({ name: 'home' });
+            router.push('/');
         }, 1000);
     } catch (error) {
         if (error.response?.data) {
@@ -69,6 +69,7 @@ const submit = async () => {
 
 const logout = async () => {
     await authStore.logout();
+    sessionStorage.removeItem('redirectAfterLogin');
     router.push({ name: 'home' });
 };
 </script>

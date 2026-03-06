@@ -10,7 +10,7 @@ import { eventosService } from "@/services/eventosService";
 const props = defineProps({
     n_eventos: {
         type: Number,
-        default: 8,
+        default: 6,
     },
 });
 
@@ -21,8 +21,8 @@ const StateSkeleton = ref(false);
 const fetchEventos = async () => {
     try {
         StateSkeleton.value = true;
-        // Obtener eventos activos y próximos
-        const response = await eventosService.getEventosActivos();
+        // Obtener eventos optimizados para landing page
+        const response = await eventosService.getEventosLanding();
         if (Array.isArray(response)) {
             // Tomar solo la cantidad especificada
             eventos.value = response.slice(0, props.n_eventos);
@@ -50,26 +50,18 @@ onMounted(() => fetchEventos());
 </script>
 
 <template>
-    <section id="eventos-nuevos" class="py-20 bg-white dark:bg-gray-900">
+    <section id="eventos-nuevos" class="py-8 bg-white dark:bg-gray-900">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Header -->
-            <div class="flex flex-col md:flex-row justify-between items-center mb-12">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
                 <div>
-                    <div class="inline-block mb-4">
-                        <span class="text-[#B3224D] font-bold text-sm uppercase tracking-wider">
-                            Próximos eventos
-                        </span>
-                    </div>
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                         Nuevos
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#B3224D] to-[#8d1a3c]">
                             lanzamientos
                         </span>
                     </h2>
                 </div>
-                <RouterLink to="/eventos" class="hidden lg:block mt-4 md:mt-0">
-                    <ButtonPrimary name="Ver todos los eventos" :flecha="true" />
-                </RouterLink>
             </div>
 
             <!-- Mensaje sin eventos -->
@@ -85,13 +77,17 @@ onMounted(() => fetchEventos());
             </div>
 
             <!-- Grid de eventos -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Skeleton cargando -->
                 <EventoSkeleton v-if="StateSkeleton" :cantidad="NumSkeleton" />
 
                 <!-- Eventos cargados -->
                 <template v-else>
-                    <EventoItem v-for="evento in eventos" :key="evento.id" :evento="evento" />
+                    <EventoItem
+                        v-for="evento in eventos"
+                        :key="evento.id"
+                        :evento="evento"
+                    />
                 </template>
             </div>
 
@@ -102,5 +98,6 @@ onMounted(() => fetchEventos());
                 </RouterLink>
             </div>
         </div>
+        
     </section>
 </template>

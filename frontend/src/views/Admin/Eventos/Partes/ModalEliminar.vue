@@ -26,12 +26,12 @@ const closeModal = () => {
 };
 
 const eliminarData = async () => {
-    if (!props.data?.id) return;
+    if (!props.data?.slug) return;
 
     cargando.value = true;
 
     try {
-        await eventosStore.deleteEvento(props.data.id);
+        await eventosStore.deleteEvento(props.data.slug);
         toastGlobalHelper.success("Evento eliminado exitosamente");
         emit("data_destroyed");
         closeModal();

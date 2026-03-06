@@ -44,7 +44,16 @@ const handleSubmit = async () => {
 
         // Verificar que sea un cliente
         if (authStore.userRole === 'CLIENTE') {
-            router.push('/mis-tickets')
+            // Verificar si hay una URL de retorno (redirect)
+            const redirectPath = router.currentRoute.value.query.redirect
+            
+            if (redirectPath) {
+                // Ir a la página que intentaba visitar
+                router.push(redirectPath)
+            } else {
+                // Volver al home (landing page)
+                router.push('/')
+            }
         } else {
             generalError.value = 'Acceso denegado. Use el login de trabajadores.'
             await authStore.logout()

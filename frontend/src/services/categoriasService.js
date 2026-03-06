@@ -19,9 +19,6 @@ export const categoriasService = {
   updateCategoria(id, data) {
     return api.put(`/eventos/categorias/${id}/`, data).then(r => r.data)
   },
-  patchCategoria(id, data) {
-    return api.patch(`/eventos/categorias/${id}/`, data).then(r => r.data)
-  },
   deleteCategoria(id) {
     return api.delete(`/eventos/categorias/${id}/`).then(r => r.data)
   }

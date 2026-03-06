@@ -60,7 +60,7 @@ const submit = async () => {
         setTimeout(async () => {
             try {
                 await authStore.login(form.value.dni, form.value.password);
-                // El navigation guard redirigirá a completar-perfil si falta nombre_completo/telefono
+                // Redirigir a completar perfil (siempre necesario en registro)
                 router.push({ name: 'completar-perfil' });
             } catch (loginError) {
                 toastHelper.error('Registro completado. Por favor inicia sesión');

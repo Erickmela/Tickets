@@ -23,7 +23,7 @@ const toastGlobalHelper = useToasts(toastGlobal);
 const authStore = useAuthStore();
 const eventosStore = useEventosStore();
 
-// Leer el slug que puede ser un encoded_id o un id normal
+// Leer el slug del evento desde los parámetros de la ruta
 const eventoId = computed(() => route.params.slug);
 const evento = ref(null);
 

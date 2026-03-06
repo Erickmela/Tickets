@@ -46,7 +46,6 @@ watch(() => props.description, (newDescription) => {
 
 <template>
     <div class="relative min-h-[100dvh] flex flex-col text-base bg-gradient-to-t from-[#B3224D]/10 to-white dark:from-gray-800 dark:to-gray-900">
-
         <Navbar v-if="showNavbar" />
 
         <div class="flex justify-center flex-grow w-full">
@@ -81,6 +80,5 @@ watch(() => props.description, (newDescription) => {
                 </div>
             </div>
         </footer>
-
     </div>
 </template>

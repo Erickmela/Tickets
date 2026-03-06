@@ -75,6 +75,49 @@ class EventoListSerializer(serializers.ModelSerializer):
         return representation
 
 
+class EventoLandingSerializer(serializers.ModelSerializer):
+    """
+    Serializer ultra-ligero para landing page
+    Solo campos esenciales para mostrar tarjetas de eventos
+    """
+    encoded_id = serializers.SerializerMethodField()
+    categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
+    fecha = serializers.SerializerMethodField()
+    precio_desde = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Evento
+        fields = [
+            'id', 'encoded_id', 'nombre', 'categoria_nombre',
+            'lugar', 'region', 'estado', 'activo', 'imagen_principal',
+            'fecha', 'precio_desde'
+        ]
+    
+    def get_encoded_id(self, obj):
+        """Retornar ID encriptado"""
+        return encode_id(obj.id)
+    
+    def get_fecha(self, obj):
+        """Obtener fecha de la primera presentación"""
+        primera_presentacion = obj.presentaciones.order_by('fecha').first()
+        if primera_presentacion:
+            return primera_presentacion.fecha.isoformat()
+        return None
+    
+    def get_precio_desde(self, obj):
+        """Obtener el precio mínimo de todas las zonas del evento"""
+        precio_min = None
+        for presentacion in obj.presentaciones.all():
+            zonas = presentacion.zonas.filter(activo=True)
+            if zonas.exists():
+                zona_min = zonas.order_by('precio').first()
+                if zona_min:
+                    if precio_min is None or zona_min.precio < precio_min:
+                        precio_min = zona_min.precio
+        
+        return float(precio_min) if precio_min else None
+
+
 class EventoCreateSerializer(serializers.ModelSerializer):
     """Serializer para crear y actualizar eventos con presentaciones y zonas"""
     presentaciones_data = serializers.JSONField(write_only=True, required=False, help_text='Array de presentaciones con fecha, hora y zonas')

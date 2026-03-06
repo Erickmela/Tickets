@@ -167,7 +167,7 @@ watch(() => form.value.tickets[0]?.presentacion_id, async (newPresentacionId) =>
 
 onMounted(async () => {
     try {
-        // Cargar eventos para select (solo id, encoded_id, nombre)
+        // Cargar eventos para select (id, slug, nombre)
         eventosActivos.value = await eventosStore.fetchEventosSelect();
 
         // Si solo hay un evento activo, seleccionarlo automáticamente

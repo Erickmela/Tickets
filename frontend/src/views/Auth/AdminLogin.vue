@@ -44,7 +44,14 @@ const handleSubmit = async () => {
 
         // Verificar que NO sea un cliente
         if (authStore.userRole !== 'CLIENTE') {
-            router.push('/admin/dashboard')
+            // Redirigir según el rol
+            if (authStore.userRole === 'VALIDADOR') {
+                // VALIDADORES van directo al escáner
+                router.push('/admin/escaner')
+            } else {
+                // ADMIN y VENDEDOR van al dashboard
+                router.push('/admin/dashboard')
+            }
         } else {
             generalError.value = 'Acceso denegado. Use el login de clientes.'
             await authStore.logout()

@@ -9,6 +9,7 @@ from .zona_serializers import (
 from .evento_serializers import (
     EventoSerializer,
     EventoListSerializer,
+    EventoLandingSerializer,
     EventoCreateSerializer
 )
 from .presentacion_serializers import (
@@ -27,6 +28,7 @@ __all__ = [
     'ZonaListSerializer',
     'EventoSerializer',
     'EventoListSerializer',
+    'EventoLandingSerializer',
     'EventoCreateSerializer',
     'EventoSelectSerializer',
     'PresentacionSerializer',
