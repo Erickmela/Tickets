@@ -70,6 +70,36 @@ class CarritoViewSet(viewsets.ModelViewSet):
                     activo=True
                 ).update(activo=False)
                 
+                # Validar límites antes de crear el carrito
+                eventos_tickets = {}
+                total_tickets = 0
+                
+                for item_data in items_data:
+                    from apps.eventos.models import Zona
+                    zona = Zona.objects.select_related('presentacion', 'presentacion__evento').get(id=item_data['zona_id'])
+                    
+                    evento_id = zona.presentacion.evento.id
+                    if evento_id not in eventos_tickets:
+                        eventos_tickets[evento_id] = 0
+                    eventos_tickets[evento_id] += item_data['cantidad']
+                    total_tickets += item_data['cantidad']
+                
+                # Verificar límite por evento (máximo 3 tickets)
+                for evento_id, cantidad in eventos_tickets.items():
+                    if cantidad > 3:
+                        from apps.eventos.models import Evento
+                        evento = Evento.objects.get(id=evento_id)
+                        raise ValueError(
+                            f'No puedes comprar más de 3 tickets para el evento "{evento.nombre}". '
+                            f'Tu carrito tiene {cantidad} tickets.'
+                        )
+                
+                # Verificar límite total (máximo 10 tickets)
+                if total_tickets > 10:
+                    raise ValueError(
+                        f'No puedes comprar más de 10 tickets en total. Tu carrito tiene {total_tickets} tickets.'
+                    )
+                
                 # Crear nuevo carrito
                 carrito = Carrito.objects.create(
                     cliente=request.user.perfil_cliente,
@@ -136,25 +166,91 @@ class CarritoViewSet(viewsets.ModelViewSet):
         
         try:
             from apps.eventos.models import Zona
-            zona = Zona.objects.get(id=zona_id)
             
-            # Verificar si el item ya existe
-            item_existente = CarritoItem.objects.filter(
-                carrito=carrito,
-                zona=zona
-            ).first()
-            
-            if item_existente:
-                item_existente.cantidad += cantidad
-                item_existente.save()
-                item_serializer = CarritoItemSerializer(item_existente)
-            else:
-                item = CarritoItem.objects.create(
-                    carrito=carrito,
-                    zona=zona,
-                    cantidad=cantidad
+            with transaction.atomic():
+                # Lock optimista: bloquea la zona durante la verificación
+                zona = Zona.objects.select_related('presentacion', 'presentacion__evento').get(id=zona_id)
+                
+                # Validar límites del carrito completo
+                items_actuales = CarritoItem.objects.filter(carrito=carrito).select_related(
+                    'zona', 'zona__presentacion', 'zona__presentacion__evento'
                 )
-                item_serializer = CarritoItemSerializer(item)
+                
+                # Calcular tickets actuales por evento y totales
+                eventos_tickets = {}
+                total_tickets_actual = 0
+                
+                for item in items_actuales:
+                    evento_id = item.zona.presentacion.evento.id
+                    if evento_id not in eventos_tickets:
+                        eventos_tickets[evento_id] = 0
+                    eventos_tickets[evento_id] += item.cantidad
+                    total_tickets_actual += item.cantidad
+                
+                # Verificar si el item ya existe
+                item_existente = CarritoItem.objects.filter(
+                    carrito=carrito,
+                    zona=zona
+                ).first()
+                
+                if item_existente:
+                    nueva_cantidad = item_existente.cantidad + cantidad
+                    tickets_adicionales = cantidad
+                else:
+                    nueva_cantidad = cantidad
+                    tickets_adicionales = cantidad
+                
+                # Calcular nuevos totales
+                evento_id = zona.presentacion.evento.id
+                tickets_evento_nuevo = eventos_tickets.get(evento_id, 0) + tickets_adicionales
+                total_tickets_nuevo = total_tickets_actual + tickets_adicionales
+                
+                # VALIDACIÓN: Límite por evento (3 tickets)
+                if tickets_evento_nuevo > 3:
+                    return Response(
+                        {
+                            'error': 'Límite de compra excedido',
+                            'mensaje': f'No puedes comprar más de 3 tickets para el evento "{zona.presentacion.evento.nombre}". '
+                                      f'Tu carrito tendría {tickets_evento_nuevo} tickets.'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # VALIDACIÓN: Límite total (10 tickets)
+                if total_tickets_nuevo > 10:
+                    return Response(
+                        {
+                            'error': 'Límite de compra excedido',
+                            'mensaje': f'No puedes comprar más de 10 tickets en total. '
+                                      f'Tu carrito tendría {total_tickets_nuevo} tickets.'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # VALIDACIÓN: Verificar disponibilidad
+                if not zona.tiene_disponibilidad(nueva_cantidad if item_existente else cantidad):
+                    disponibles = zona.tickets_disponibles()
+                    return Response(
+                        {
+                            'error': f'No hay suficientes tickets disponibles',
+                            'zona': zona.nombre,
+                            'solicitados': nueva_cantidad,
+                            'disponibles': disponibles
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                if item_existente:
+                    item_existente.cantidad = nueva_cantidad
+                    item_existente.save()
+                    item_serializer = CarritoItemSerializer(item_existente)
+                else:
+                    item = CarritoItem.objects.create(
+                        carrito=carrito,
+                        zona=zona,
+                        cantidad=cantidad
+                    )
+                    item_serializer = CarritoItemSerializer(item)
             
             return Response(item_serializer.data)
             

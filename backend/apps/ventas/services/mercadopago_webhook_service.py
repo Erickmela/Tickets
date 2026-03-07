@@ -198,10 +198,13 @@ class MercadoPagoWebhookService:
     def _create_missing_tickets(self, order: Orden) -> None:
         """
         Crear tickets faltantes para una orden aprobada
+        VALIDACIÓN DE CAPACIDAD CON LOCK para prevenir sobreventa
         
         Args:
             order: Orden aprobada
         """
+        from apps.eventos.models import Zona
+        
         items = order.items.all()
         
         # Verificar si ya tiene venta asociada
@@ -219,39 +222,108 @@ class MercadoPagoWebhookService:
                 vendedor=None,
             )
         
-        # Crear tickets para cada item si no existen
-        from .qr_service import QRCodeService
+        # Verificar disponibilidad y límites con LOCK de base de datos
+        zonas_sin_capacidad = []
         
-        for item in items:
-            existing_tickets = Ticket.objects.filter(
-                venta=venta,
-                zona=item.zona
-            ).count()
+        with transaction.atomic():
+            # Validar límites de compra
+            eventos_tickets = {}
+            total_tickets = 0
             
-            tickets_needed = item.cantidad - existing_tickets
+            for item in items:
+                evento_id = item.zona.presentacion.evento.id
+                if evento_id not in eventos_tickets:
+                    eventos_tickets[evento_id] = 0
+                eventos_tickets[evento_id] += item.cantidad
+                total_tickets += item.cantidad
             
-            for _ in range(tickets_needed):
-                ticket = Ticket.objects.create(
+            # Verificar límite por evento (3 tickets)
+            for evento_id, cantidad in eventos_tickets.items():
+                if cantidad > 3:
+                    order.estado = 'error'
+                    order.observaciones = f'ERROR: Límite de 3 tickets por evento excedido ({cantidad} tickets).'
+                    order.save()
+                    logger.error(f"LÍMITE EXCEDIDO: Orden {order.id} tiene {cantidad} tickets (máximo 3)")
+                    return
+            
+            # Verificar límite total (10 tickets)
+            if total_tickets > 10:
+                order.estado = 'error'
+                order.observaciones = f'ERROR: Límite total de 10 tickets excedido ({total_tickets} tickets).'
+                order.save()
+                logger.error(f"LÍMITE EXCEDIDO: Orden {order.id} tiene {total_tickets} tickets (máximo 10)")
+                return
+            
+            for item in items:
+                # Lock pesimista: bloquea la zona durante la transacción
+                zona_locked = Zona.objects.select_for_update().get(id=item.zona.id)
+                
+                existing_tickets = Ticket.objects.filter(
                     venta=venta,
-                    presentacion=item.zona.presentacion,
-                    zona=item.zona,
-                )
+                    zona=zona_locked
+                ).count()
                 
-                # Generar QR
-                qr_file, token = QRCodeService.generar_qr(
-                    codigo_uuid=str(ticket.codigo_uuid),
-                    ticket_id=ticket.id,
-                    usar_encriptacion=True
-                )
+                tickets_needed = item.cantidad - existing_tickets
                 
-                if token:
-                    ticket.token_encriptado = token
-                
-                ticket.qr_image.save(
-                    f'ticket_{ticket.codigo_uuid}.png',
-                    qr_file,
-                    save=True
+                if tickets_needed > 0:
+                    # Verificar disponibilidad en tiempo real con la zona bloqueada
+                    if not zona_locked.tiene_disponibilidad(tickets_needed):
+                        disponibles = zona_locked.tickets_disponibles()
+                        zonas_sin_capacidad.append({
+                            'zona': zona_locked.nombre,
+                            'necesarios': tickets_needed,
+                            'disponibles': disponibles
+                        })
+            
+            # Si no hay capacidad suficiente, marcar orden como problemática
+            if zonas_sin_capacidad:
+                order.estado = 'error'
+                order.observaciones = f'ERROR: Capacidad excedida. Pago aprobado pero sin stock: {zonas_sin_capacidad}'
+                order.save()
+                logger.error(
+                    f"CAPACIDAD EXCEDIDA para orden {order.id}. "
+                    f"Pago aprobado pero sin stock: {zonas_sin_capacidad}. "
+                    f"REQUIERE REEMBOLSO MANUAL."
                 )
+                # TODO: Enviar notificación al admin y al cliente
+                # TODO: Considerar reembolso automático via Mercado Pago API
+                return
+            
+            # Crear tickets dentro del lock
+            from .qr_service import QRCodeService
+            
+            for item in items:
+                zona_locked = Zona.objects.select_for_update().get(id=item.zona.id)
+                
+                existing_tickets = Ticket.objects.filter(
+                    venta=venta,
+                    zona=zona_locked
+                ).count()
+                
+                tickets_needed = item.cantidad - existing_tickets
+                
+                for _ in range(tickets_needed):
+                    ticket = Ticket.objects.create(
+                        venta=venta,
+                        presentacion=zona_locked.presentacion,
+                        zona=zona_locked,
+                    )
+                    
+                    # Generar QR
+                    qr_file, token = QRCodeService.generar_qr(
+                        codigo_uuid=str(ticket.codigo_uuid),
+                        ticket_id=ticket.id,
+                        usar_encriptacion=True
+                    )
+                    
+                    if token:
+                        ticket.token_encriptado = token
+                    
+                    ticket.qr_image.save(
+                        f'ticket_{ticket.codigo_uuid}.png',
+                        qr_file,
+                        save=True
+                    )
         
         logger.info(f"Tickets creados/verificados para orden {order.id}")
     

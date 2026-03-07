@@ -5,6 +5,7 @@ import HeaderSecction from '@/components/Admin/Header.vue';
 import ToastNotification from '@/components/ToastNotification.vue';
 import FiltroEvento from './Partes/FiltroEvento.vue';
 import EstadisticasGenerales from './Partes/EstadisticasGenerales.vue';
+import DetalleZonas from './Partes/DetalleZonas.vue';
 import GraficoBarra from './Partes/GraficoBarra.vue';
 import GraficoPastel from './Partes/GraficoPastel.vue';
 import GraficoLinea from './Partes/GraficoLinea.vue';
@@ -61,14 +62,18 @@ const cargarDatosEvento = async (evento) => {
             zona: z.nombre,
             vendidos: z.tickets_vendidos,
             disponibles: z.tickets_disponibles,
-            capacidad: z.capacidad_maxima
+            capacidad: z.capacidad_maxima,
+            ingresos: z.ingresos,
+            presentacion_fecha: z.presentacion_fecha,
+            presentacion_hora: z.presentacion_hora
         }));
 
         // Preparar datos para gráfico de pastel (ingresos por zona)
         datosIngresos.value = stats.zonas.map(z => ({
             zona: z.nombre,
             ingresos: z.ingresos,
-            precio: z.precio
+            precio: z.precio,
+            presentacion_fecha: z.presentacion_fecha
         }));
 
         // Obtener evolución de ventas (últimos 7 días)
@@ -170,6 +175,9 @@ const mostrarContenido = computed(() => eventoSeleccionado.value !== null);
 
                 <!-- Gráfico de Línea (ancho completo) -->
                 <GraficoLinea :datos="datosEvolucion" :loading="loading" />
+
+                <!-- Detalle por Zona y Presentación -->
+                <DetalleZonas :datos="datosZonas" :loading="loading" />
             </template>
         </div>
     </AdmLayout>

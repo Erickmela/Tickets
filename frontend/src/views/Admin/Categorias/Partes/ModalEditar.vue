@@ -24,7 +24,7 @@ function getFormData() {
     return {
         nombre: "",
         imagen_path: null,
-        cat_estado: "",
+        estado: "",
     };
 }
 
@@ -44,7 +44,7 @@ watch(
             form.value = {
                 nombre: value.nombre || "",
                 imagen_path: null,
-                cat_estado: value.cat_estado || "",
+                estado: value.estado || "",
             };
         }
     },
@@ -72,6 +72,8 @@ const editarData = async () => {
         data.append("nombre", form.value.nombre);
         if (form.value.imagen_path) data.append("imagen_path", form.value.imagen_path);
         data.append("estado", form.value.estado);
+        // Sincronizar campo activo con estado
+        data.append("activo", form.value.estado === '1' ? 'true' : 'false');
         await categoriasStore.updateCategoria(props.data.id, data);
         toastGlobalHelper.success("Categoría actualizada exitosamente");
         emit("data_updated");

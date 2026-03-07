@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 from django.conf import settings
+from django.db import transaction
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -106,6 +107,67 @@ class MercadoPagoViewSet(viewsets.ViewSet):
             if not items.exists():
                 return Response(
                     {'error': 'El carrito está vacío'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # VALIDACIÓN CRÍTICA: Verificar disponibilidad y límites antes de crear preferencia
+            # Usar select_for_update() para prevenir race conditions
+            from apps.eventos.models import Zona
+            zonas_sin_stock = []
+            
+            # Validar límite de tickets por evento (máximo 3)
+            eventos_tickets = {}
+            total_tickets = 0
+            
+            for item in items:
+                evento_id = item.zona.presentacion.evento.id
+                if evento_id not in eventos_tickets:
+                    eventos_tickets[evento_id] = 0
+                eventos_tickets[evento_id] += item.cantidad
+                total_tickets += item.cantidad
+            
+            # Verificar límite por evento
+            for evento_id, cantidad in eventos_tickets.items():
+                if cantidad > 3:
+                    evento = item.zona.presentacion.evento
+                    return Response(
+                        {
+                            'error': f'Límite de compra excedido',
+                            'mensaje': f'No puedes comprar más de 3 tickets para el evento "{evento.nombre}". Tu carrito tiene {cantidad} tickets.'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            # Verificar límite total por compra (máximo 10)
+            if total_tickets > 10:
+                return Response(
+                    {
+                        'error': 'Límite de compra excedido',
+                        'mensaje': f'No puedes comprar más de 10 tickets en una sola compra. Tu carrito tiene {total_tickets} tickets.'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            with transaction.atomic():
+                for item in items:
+                    # Lock optimista: bloquea la fila hasta que termine la transacción
+                    zona_locked = Zona.objects.select_for_update().get(id=item.zona.id)
+                    
+                    if not zona_locked.tiene_disponibilidad(item.cantidad):
+                        disponibles = zona_locked.tickets_disponibles()
+                        zonas_sin_stock.append({
+                            'zona': zona_locked.nombre,
+                            'solicitados': item.cantidad,
+                            'disponibles': disponibles
+                        })
+            
+            if zonas_sin_stock:
+                return Response(
+                    {
+                        'error': 'No hay suficientes tickets disponibles',
+                        'detalles': zonas_sin_stock,
+                        'mensaje': 'Algunas zonas no tienen suficiente capacidad. Por favor actualiza tu carrito.'
+                    },
                     status=status.HTTP_400_BAD_REQUEST
                 )
             

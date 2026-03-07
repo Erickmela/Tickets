@@ -109,19 +109,19 @@ class EventoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'])
-    def estadisticas(self, request, pk=None):
+    def estadisticas(self, request, nombre=None):
         """Obtener estadísticas completas del evento para el dashboard"""
         evento = self.get_object()
         
-        # Tickets del evento
-        tickets_evento = Ticket.objects.filter(zona__evento=evento)
+        # Tickets del evento (a través de presentaciones)
+        tickets_evento = Ticket.objects.filter(zona__presentacion__evento=evento)
         total_tickets_vendidos = tickets_evento.filter(estado=EstadoTicket.ACTIVO).count()
         tickets_usados = tickets_evento.filter(estado=EstadoTicket.USADO).count()
         tickets_anulados = tickets_evento.filter(estado=EstadoTicket.ANULADO).count()
         
-        # Ventas del evento
+        # Ventas del evento (a través de presentaciones)
         ventas_evento = Venta.objects.filter(
-            tickets__zona__evento=evento,
+            tickets__zona__presentacion__evento=evento,
             activo=True
         ).distinct()
         
@@ -166,7 +166,7 @@ class EventoViewSet(viewsets.ModelViewSet):
         })
     
     @action(detail=True, methods=['get'])
-    def evolucion_ventas(self, request, pk=None):
+    def evolucion_ventas(self, request, nombre=None):
         """Obtener evolución de ventas de los últimos N días"""
         evento = self.get_object()
         dias = int(request.query_params.get('dias', 7))
@@ -175,7 +175,7 @@ class EventoViewSet(viewsets.ModelViewSet):
         fecha_inicio = fecha_fin - timedelta(days=dias)
         
         ventas = Venta.objects.filter(
-            tickets__zona__evento=evento,
+            tickets__zona__presentacion__evento=evento,
             activo=True,
             fecha_venta__gte=fecha_inicio,
             fecha_venta__lte=fecha_fin
@@ -199,13 +199,13 @@ class EventoViewSet(viewsets.ModelViewSet):
         return Response(evolucion)
     
     @action(detail=True, methods=['get'])
-    def tickets_reporte(self, request, pk=None):
+    def tickets_reporte(self, request, nombre=None):
         """Obtener todos los tickets del evento para generar reporte"""
         evento = self.get_object()
         
         tickets = Ticket.objects.filter(
-            zona__evento=evento
-        ).select_related('zona', 'venta').order_by('zona__nombre', 'nombre_titular')
+            zona__presentacion__evento=evento
+        ).select_related('zona', 'zona__presentacion', 'venta').order_by('zona__presentacion__fecha', 'zona__nombre', 'nombre_titular')
         
         tickets_data = []
         for ticket in tickets:
@@ -253,15 +253,21 @@ class EventoViewSet(viewsets.ModelViewSet):
         return ventas_por_metodo
     
     def _calcular_estadisticas_zonas(self, evento, tickets_evento):
-        """Calcular estadísticas por zona"""
+        """Calcular estadísticas por zona (agregando todas las presentaciones)"""
         zonas_stats = []
-        for zona in evento.zonas.all():
+        
+        # Obtener todas las zonas de todas las presentaciones del evento
+        zonas = Zona.objects.filter(presentacion__evento=evento).select_related('presentacion')
+        
+        for zona in zonas:
             tickets_zona = tickets_evento.filter(zona=zona, estado=EstadoTicket.ACTIVO)
             ingresos_zona = tickets_zona.count() * zona.precio
             
             zonas_stats.append({
                 'id': zona.id,
                 'nombre': zona.nombre,
+                'presentacion_fecha': zona.presentacion.fecha.isoformat(),
+                'presentacion_hora': zona.presentacion.hora_inicio.isoformat(),
                 'precio': float(zona.precio),
                 'capacidad_maxima': zona.capacidad_maxima,
                 'tickets_vendidos': zona.tickets_vendidos(),

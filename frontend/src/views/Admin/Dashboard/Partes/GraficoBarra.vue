@@ -29,7 +29,15 @@ const crearGrafico = () => {
 
     const ctx = chartCanvas.value.getContext('2d');
 
-    const zonas = props.datos.map(d => d.zona);
+    // Crear etiquetas con nombre de zona y fecha de presentación
+    const zonas = props.datos.map(d => {
+        if (d.presentacion_fecha) {
+            const fecha = new Date(d.presentacion_fecha);
+            const fechaStr = fecha.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+            return `${d.zona} (${fechaStr})`;
+        }
+        return d.zona;
+    });
     const vendidos = props.datos.map(d => d.vendidos);
     const disponibles = props.datos.map(d => d.disponibles);
 
