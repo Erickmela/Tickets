@@ -7,7 +7,6 @@ import Table from "./Partes/Tabla.vue";
 import ModalAgregar from "./Partes/ModalAgregar.vue";
 import ModalEditar from "./Partes/ModalEditar.vue";
 import Toolbar from "@/components/Admin/Toolbar.vue";
-import ModalEliminar from "./Partes/ModalEliminar.vue";
 import Paginate from "@/components/Admin/Paginate.vue";
 import HeaderSecction from "@/components/Admin/Header.vue";
 import ToastNotification from "@/components/ToastNotification.vue";
@@ -171,7 +170,5 @@ const closeModalEliminar = () => {
         <ModalAgregar :show="stateModalCrear" @data_created="fetchDatos" @close="closeModalCrear" />
         <ModalEditar :show="stateModalEditar" :data="itemSelected" @data_updated="fetchDatos"
             @close="closeModalEditar" />
-        <ModalEliminar :show="stateModalEliminar" :data="itemSelected" @data_destroyed="fetchDatos"
-            @close="closeModalEliminar" />
     </AdmLayout>
 </template>
