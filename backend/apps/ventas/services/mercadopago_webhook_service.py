@@ -276,17 +276,14 @@ class MercadoPagoWebhookService:
                         })
             
             # Si no hay capacidad suficiente, marcar orden como problemática
+            # NOTA: La orden ya existe (creada al crear preferencia de pago)
+            # Solo podemos marcar error y proceder con reembolso
             if zonas_sin_capacidad:
                 order.estado = 'error'
                 order.observaciones = f'ERROR: Capacidad excedida. Pago aprobado pero sin stock: {zonas_sin_capacidad}'
                 order.save()
-                logger.error(
-                    f"CAPACIDAD EXCEDIDA para orden {order.id}. "
-                    f"Pago aprobado pero sin stock: {zonas_sin_capacidad}. "
-                    f"REQUIERE REEMBOLSO MANUAL."
-                )
-                # TODO: Enviar notificación al admin y al cliente
-                # TODO: Considerar reembolso automático via Mercado Pago API
+                # TODO: Enviar email urgente al admin
+                # TODO: Enviar email al cliente explicando que recibirá reembolso
                 return
             
             # Crear tickets dentro del lock
