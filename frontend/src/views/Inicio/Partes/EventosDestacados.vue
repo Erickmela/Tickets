@@ -125,7 +125,7 @@ const formatDate = (dateString) => {
                                 {{ evento.precioMinimo }}
                             </span>
                             <RouterLink 
-                                :to="`/eventos/${evento.slug}`"
+                                :to="`/eventos/${evento.nombre}`"
                                 class="px-4 py-2 bg-[#B3224D] text-white rounded-lg hover:bg-[#8d1a3c] transition text-sm font-semibold"
                             >
                                 Ver más

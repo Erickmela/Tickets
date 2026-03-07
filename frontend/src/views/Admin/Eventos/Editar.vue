@@ -25,8 +25,8 @@ const isSubmitting = ref(false);
 const isLoading = ref(true);
 const errors = ref({});
 
-// Leer el slug del evento desde los parámetros de la ruta
-const eventoId = computed(() => route.params.slug);
+// Leer el nombre del evento desde los parámetros de la ruta
+const eventoId = computed(() => route.params.nombre);
 
 // Categorías cargadas dinámicamente
 const categorias = ref([]);

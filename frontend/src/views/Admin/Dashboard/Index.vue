@@ -37,7 +37,7 @@ const cargarDatosEvento = async (evento) => {
         eventoSeleccionado.value = evento;
 
         // Obtener estadísticas completas desde el backend (optimizado)
-        const stats = await eventosService.getEstadisticasEvento(evento.slug);
+        const stats = await eventosService.getEstadisticasEvento(evento.nombre);
 
         // Validar que el evento tenga zonas
         if (!stats.zonas || stats.zonas.length === 0) {
@@ -72,7 +72,7 @@ const cargarDatosEvento = async (evento) => {
         }));
 
         // Obtener evolución de ventas (últimos 7 días)
-        const evolucion = await eventosService.getEvolucionVentas(evento.slug, 7);
+        const evolucion = await eventosService.getEvolucionVentas(evento.nombre, 7);
         datosEvolucion.value = evolucion.map(e => ({
             fecha: e.fecha,
             ventas: e.ventas,

@@ -122,7 +122,7 @@ const crearEvento = () => {
 
 // Navegar a editar evento
 const editarEvento = (data) => {
-    router.push({ name: 'admin-eventos-editar', params: { slug: data.slug } });
+    router.push({ name: 'admin-eventos-editar', params: { nombre: data.nombre } });
 };
 
 // Modal Eliminar
@@ -138,7 +138,7 @@ const closeModalEliminar = () => {
 
 // Navegar a zonas del evento
 const verZonas = (evento) => {
-    router.push(`/admin/eventos/${evento.slug}/zonas`);
+    router.push(`/admin/eventos/${evento.nombre}/zonas`);
 };
 </script>
 

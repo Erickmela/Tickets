@@ -89,12 +89,16 @@ const getRoleBadgeColor = (rol) => {
                     </tr>
 
                     <tr v-else v-for="dat in datos" :key="dat.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <TableTd class="whitespace-nowrap">
-                            <span class="font-medium text-gray-900 dark:text-white">{{ dat.usuario }}</span>
+                        <TableTd class="max-w-[150px]">
+                            <span class="font-medium text-gray-900 dark:text-white truncate block">{{ dat.usuario }}</span>
                         </TableTd>
                         <TableTd :contend="dat.dni" class="whitespace-nowrap" />
-                        <TableTd :contend="dat.nombre_completo" class="whitespace-nowrap" />
-                        <TableTd :contend="dat.email || '-'" class="whitespace-nowrap" />
+                        <TableTd class="max-w-xs">
+                            <span class="truncate block">{{ dat.nombre_completo }}</span>
+                        </TableTd>
+                        <TableTd class="max-w-xs">
+                            <span class="truncate block">{{ dat.email || '-' }}</span>
+                        </TableTd>
                         <TableTd>
                             <span :class="getRoleBadgeColor(dat.rol)"
                                 class="px-2 py-1 text-xs font-medium rounded-full">

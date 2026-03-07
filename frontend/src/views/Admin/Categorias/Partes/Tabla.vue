@@ -58,15 +58,15 @@ const formatFecha = (fecha) => {
 						</TableTd>
 					</tr>
 					<tr v-else v-for="cat in datos" :key="cat.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-						<TableTd class="whitespace-nowrap">
-							<span class="font-medium text-gray-900 dark:text-white">{{ cat.nombre }}</span>
+						<TableTd class="max-w-xs">
+							<span class="font-medium text-gray-900 dark:text-white truncate block">{{ cat.nombre }}</span>
 						</TableTd>
 						<TableTd>
 							<img v-if="cat.imagen_path" :src="cat.imagen_path" alt="Imagen" class="w-10 h-10 object-cover rounded" />
 							<span v-else class="text-xs text-gray-400">Sin imagen</span>
 						</TableTd>
-						<TableTd>
-							<span class="text-xs text-gray-500 dark:text-gray-400">{{ cat.slug }}</span>
+						<TableTd class="max-w-[150px]">
+							<span class="text-xs text-gray-500 dark:text-gray-400 truncate block">{{ cat.slug }}</span>
 						</TableTd>
 						<TableTd>
 							<Estado :estado="cat.estado" />

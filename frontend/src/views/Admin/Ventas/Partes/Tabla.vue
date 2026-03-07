@@ -80,18 +80,18 @@ const emit = defineEmits(["editar", "eliminar"]);
                         <TableTd :contend="'#' + dat.id" class="whitespace-nowrap font-medium" />
 
                         <TableTd>
-                            <div>
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                            <div class="max-w-xs">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
                                     {{ dat.cliente_nombre }}
                                 </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                     DNI: {{ dat.cliente_dni || 'N/A' }}
                                 </div>
                             </div>
                         </TableTd>
 
-                        <TableTd>
-                            <div class="text-sm text-gray-900 dark:text-white">
+                        <TableTd class="max-w-xs">
+                            <div class="text-sm text-gray-900 dark:text-white truncate">
                                 {{ dat.vendedor_nombre }}
                             </div>
                         </TableTd>

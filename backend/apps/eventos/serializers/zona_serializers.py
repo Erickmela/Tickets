@@ -66,15 +66,17 @@ class ZonaListSerializer(serializers.ModelSerializer):
     tickets_disponibles = serializers.IntegerField(read_only=True)
     tickets_vendidos = serializers.IntegerField(read_only=True)
     capacidad = serializers.IntegerField(source='capacidad_maxima')
-    evento_nombre = serializers.CharField(source='evento.nombre', read_only=True)
-    evento_lugar = serializers.CharField(source='evento.lugar', read_only=True)
+    evento_nombre = serializers.CharField(source='presentacion.evento.nombre', read_only=True)
+    evento_lugar = serializers.CharField(source='presentacion.evento.lugar', read_only=True)
+    presentacion_fecha = serializers.DateField(source='presentacion.fecha', read_only=True)
+    presentacion_hora = serializers.TimeField(source='presentacion.hora_inicio', read_only=True)
     
     class Meta:
         model = Zona
         fields = [
             'id', 'codigo', 'nombre', 'descripcion', 'precio', 'capacidad', 
             'tickets_disponibles', 'tickets_vendidos', 'activo', 
-            'evento_nombre', 'evento_lugar'
+            'evento_nombre', 'evento_lugar', 'presentacion_fecha', 'presentacion_hora'
         ]
         read_only_fields = ['id', 'codigo']
     

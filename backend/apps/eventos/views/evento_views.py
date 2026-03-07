@@ -37,7 +37,7 @@ class EventoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'lugar']
-    lookup_field = 'slug'  # Usar slug en lugar de ID numérico
+    lookup_field = 'nombre'
     
     def get_permissions(self):
         """Permisos según acción - público para consultas, autenticado para cambios"""

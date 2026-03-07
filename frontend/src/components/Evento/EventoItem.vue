@@ -44,7 +44,7 @@ const fechaFormateada = computed(() => {
 <template>
     <!-- Card minimalista -->
     <RouterLink
-        :to="`/eventos/${evento.slug}`"
+        :to="`/eventos/${evento.nombre}`"
         class="group flex flex-col bg-white dark:bg-gray-900 rounded-xl ">
         
         <!-- Imagen del evento - Ocupa la mayor parte del espacio -->

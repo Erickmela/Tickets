@@ -14,13 +14,14 @@ import { useEventosStore } from "@/stores/eventos";
 const emit = defineEmits(["close", "data_created"]);
 const props = defineProps({
     show: Boolean,
-    eventoId: Number,
+    evento: Object,
 });
 
 const eventosStore = useEventosStore();
 
 function getFormData() {
     return {
+        presentacion_id: "",
         nombre: "",
         descripcion: "",
         precio: "",
@@ -48,8 +49,8 @@ const limpiar = () => {
 };
 
 const crearData = async () => {
-    if (!props.eventoId) {
-        toastFormHelper.error("No se ha seleccionado un evento");
+    if (!form.value.presentacion_id) {
+        toastFormHelper.error("Debe seleccionar una presentación");
         return;
     }
 
@@ -62,7 +63,7 @@ const crearData = async () => {
             descripcion: form.value.descripcion,
             precio: form.value.precio,
             capacidad_maxima: form.value.capacidad,
-            evento: props.eventoId,
+            presentacion: form.value.presentacion_id,
         };
 
         await eventosStore.createZona(dataToSend);
@@ -101,6 +102,25 @@ const crearData = async () => {
 
             <form @submit.prevent="crearData" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Selector de Presentación -->
+                    <div class="md:col-span-2">
+                        <InputLabel for="presentacion" value="Presentación *" />
+                        <select 
+                            id="presentacion" 
+                            v-model="form.presentacion_id" 
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                            required>
+                            <option value="">Seleccione una presentación</option>
+                            <option 
+                                v-for="presentacion in evento?.presentaciones" 
+                                :key="presentacion.id" 
+                                :value="presentacion.id">
+                                {{ presentacion.fecha }} - {{ presentacion.hora_inicio }} {{ presentacion.descripcion ? `(${presentacion.descripcion})` : '' }}
+                            </option>
+                        </select>
+                        <InputError :message="errors.presentacion" />
+                    </div>
+
                     <div class="md:col-span-2">
                         <InputLabel for="nombre" value="Nombre de la Zona *" />
                         <InputText id="nombre" v-model="form.nombre" type="text" placeholder="Ej: VIP, Platea, General"

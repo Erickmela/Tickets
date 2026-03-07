@@ -150,6 +150,15 @@ class Evento(models.Model):
         indexes = [
             models.Index(fields=['activo', 'fecha_creacion']),
         ]
+    
+    def save(self, *args, **kwargs):
+        """Establecer activo=True automáticamente si estado es Próximo o Activo"""
+        if self.estado in ['1', '2']:  # '1' = Próximo, '2' = Activo
+            self.activo = True
+        else:  # '3' = Finalizado
+            self.activo = False
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return f'{self.nombre}'
     

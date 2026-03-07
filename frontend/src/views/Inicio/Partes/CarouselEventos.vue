@@ -204,7 +204,7 @@ onUnmounted(() => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <RouterLink :to="`/eventos/${evento.slug}`"
+                                        <RouterLink :to="`/eventos/${evento.nombre}`"
                                             class="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-white text-[#B3224D] font-bold rounded-2xl hover:bg-gray-100 transition-all hover:scale-105 shadow-xl">
                                             <span>Ver detalles</span>
                                             <span class="text-xl">→</span>

@@ -15,7 +15,7 @@ const emit = defineEmits(["close", "data_updated"]);
 const props = defineProps({
     show: Boolean,
     data: Object,
-    eventoId: Number,
+    evento: Object,
 });
 
 const eventosStore = useEventosStore();
@@ -78,7 +78,6 @@ const actualizarData = async () => {
             precio: form.value.precio,
             capacidad_maxima: form.value.capacidad,
             activo: form.value.activo,
-            evento: props.eventoId,
         };
 
         await eventosStore.updateZona(props.data.id, dataToSend);

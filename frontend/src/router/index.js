@@ -20,7 +20,7 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
-      path: '/eventos/:slug',
+      path: '/eventos/:nombre',
       name: 'evento-detalle',
       component: () => import('@/views/Eventos/DetalleEvento.vue'),
       meta: { requiresAuth: false }
@@ -122,13 +122,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresRole: ['ADMIN'] }
     },
     {
-      path: '/admin/eventos/:slug/editar',
+      path: '/admin/eventos/:nombre/editar',
       name: 'admin-eventos-editar',
       component: () => import('../views/Admin/Eventos/Editar.vue'),
       meta: { requiresAuth: true, requiresRole: ['ADMIN'] }
     },
     {
-      path: '/admin/eventos/:slug/zonas',
+      path: '/admin/eventos/:nombre/zonas',
       name: 'admin-zonas',
       component: () => import('../views/Admin/Zonas/Index.vue'),
       meta: { requiresAuth: true, requiresRole: ['ADMIN'] }

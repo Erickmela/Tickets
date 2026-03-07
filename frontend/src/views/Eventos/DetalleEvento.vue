@@ -223,8 +223,8 @@ const cargarEvento = async () => {
         loading.value = true;
         error.value = null;
 
-        const eventoSlug = route.params.slug;
-        const data = await eventosService.getEvento(eventoSlug);
+        const eventoNombre = route.params.nombre;
+        const data = await eventosService.getEvento(eventoNombre);
         evento.value = data;
 
         // Preseleccionar la primera presentación si existe

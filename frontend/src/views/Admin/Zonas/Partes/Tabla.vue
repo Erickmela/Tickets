@@ -31,6 +31,18 @@ const datos = computed(() => props.datos);
 const { showDropdown, selectItem, menuX, menuY, abrirMenu, cerrarMenu } = Dropdown();
 
 const emit = defineEmits(["editar", "eliminar"]);
+
+// Formatear fecha y hora de presentación
+const formatFechaPresentacion = (fecha, hora) => {
+    if (!fecha) return '-';
+    const date = new Date(fecha);
+    const fechaFormateada = date.toLocaleDateString('es-PE', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+    return hora ? `${fechaFormateada} • ${hora}` : fechaFormateada;
+};
 </script>
 
 <template>
@@ -42,6 +54,7 @@ const emit = defineEmits(["editar", "eliminar"]);
                     <tr>
                         <TableTh name="ID" />
                         <TableTh name="Nombre" />
+                        <TableTh name="Presentación" />
                         <TableTh name="Precio" />
                         <TableTh name="Capacidad" class="text-center" />
                         <TableTh name="Disponibles" class="text-center" />
@@ -53,13 +66,13 @@ const emit = defineEmits(["editar", "eliminar"]);
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-if="skeleton" v-for="i in nSkeletons" :key="i"
                         class="hover:bg-gray-50 dark:hover:bg-gray-700/50 animate-pulse">
-                        <TableTd colspan="8">
+                        <TableTd colspan="9">
                             <div class="animate-pulse flex space-x-4 h-5 md:h-6"></div>
                         </TableTd>
                     </tr>
 
                     <tr v-else-if="!skeleton && datos.length === 0">
-                        <TableTd colspan="8">
+                        <TableTd colspan="9">
                             <div class="flex flex-col items-center justify-center space-y-2 py-20">
                                 <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -79,13 +92,24 @@ const emit = defineEmits(["editar", "eliminar"]);
                     <tr v-else v-for="dat in datos" :key="dat.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <TableTd :contend="'#' + dat.id" class="whitespace-nowrap font-medium" />
 
-                        <TableTd class="whitespace-nowrap">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-gray-900 dark:text-white">
+                        <TableTd>
+                            <div class="flex flex-col max-w-xs">
+                                <span class="font-medium text-gray-900 dark:text-white truncate">
                                     {{ dat.nombre }}
                                 </span>
-                                <span v-if="dat.descripcion" class="text-xs text-gray-500 dark:text-gray-400">
+                                <span v-if="dat.descripcion" class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                     {{ dat.descripcion }}
+                                </span>
+                            </div>
+                        </TableTd>
+
+                        <TableTd class="max-w-xs">
+                            <div class="flex flex-col">
+                                <span class="text-sm text-gray-900 dark:text-white truncate">
+                                    {{ formatFechaPresentacion(dat.presentacion_fecha, dat.presentacion_hora) }}
+                                </span>
+                                <span v-if="dat.evento_lugar" class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    {{ dat.evento_lugar }}
                                 </span>
                             </div>
                         </TableTd>

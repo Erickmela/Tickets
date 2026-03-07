@@ -101,14 +101,14 @@ const getRoleBadgeColor = (rol) => {
                             </span>
                         </TableTd>
 
-                        <TableTd class="whitespace-nowrap">
-                            <span class="font-medium text-gray-900 dark:text-white">
+                        <TableTd class="max-w-xs">
+                            <span class="font-medium text-gray-900 dark:text-white truncate block">
                                 {{ dat.nombre_completo }}
                             </span>
                         </TableTd>
 
-                        <TableTd class="whitespace-nowrap">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">
+                        <TableTd class="max-w-xs">
+                            <span class="text-sm text-gray-600 dark:text-gray-400 truncate block">
                                 {{ dat.email || 'Sin email' }}
                             </span>
                         </TableTd>

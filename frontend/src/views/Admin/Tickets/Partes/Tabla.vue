@@ -109,24 +109,24 @@ const formatFecha = (fecha) => {
                         </TableTd>
 
                         <!-- Titular -->
-                        <TableTd class="whitespace-nowrap">
+                        <TableTd class="max-w-xs">
                             <div class="flex flex-col">
-                                <span class="font-medium text-gray-900 dark:text-white">
+                                <span class="font-medium text-gray-900 dark:text-white truncate">
                                     {{ dat.nombre_titular }}
                                 </span>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                     DNI: {{ dat.dni_titular }}
                                 </span>
                             </div>
                         </TableTd>
 
                         <!-- Evento / Zona -->
-                        <TableTd>
+                        <TableTd class="max-w-xs">
                             <div class="flex flex-col">
-                                <span class="font-medium text-gray-900 dark:text-white">
+                                <span class="font-medium text-gray-900 dark:text-white truncate">
                                     {{ dat.evento_nombre || '-' }}
                                 </span>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                     {{ dat.zona_nombre || '-' }}
                                 </span>
                             </div>

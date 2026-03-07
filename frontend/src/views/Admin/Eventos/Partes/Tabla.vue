@@ -32,30 +32,6 @@ const { showDropdown, selectItem, menuX, menuY, abrirMenu, cerrarMenu } = Dropdo
 
 const emit = defineEmits(["editar", "eliminar", "ver-zonas"]);
 
-const formatFecha = (fecha) => {
-    return new Date(fecha).toLocaleDateString('es-PE', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-};
-
-const formatHora = (hora) => {
-    if (!hora) return '-';
-    return hora;
-};
-
-// Función para formatear fecha y hora juntas
-const formatFechaHora = (fecha, hora) => {
-    const fechaFormateada = new Date(fecha).toLocaleDateString('es-PE', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    });
-    const horaFormateada = hora || '-';
-    return `${fechaFormateada} ${horaFormateada !== '-' ? '• ' + horaFormateada : ''}`;
-};
-
 // Función para obtener URL completa de imagen
 const getImagenUrl = (imagenPath) => {
     if (!imagenPath) return null;
@@ -73,7 +49,7 @@ const getImagenUrl = (imagenPath) => {
                     <tr>
                         <TableTh name="Portada" class="text-center" />
                         <TableTh name="Nombre" />
-                        <TableTh name="Fecha y Hora" />
+                        <TableTh name="Lugar" />
                         <TableTh name="Región" />
                         <TableTh name="Capacidad Total" class="text-center" />
                         <TableTh name="Vendidos" class="text-center" />
@@ -121,12 +97,12 @@ const getImagenUrl = (imagenPath) => {
                             </div>
                         </TableTd>
 
-                        <TableTd class="whitespace-nowrap">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-gray-900 dark:text-white">
+                        <TableTd>
+                            <div class="flex flex-col max-w-xs">
+                                <span class="font-medium text-gray-900 dark:text-white truncate">
                                     {{ dat.nombre }}
                                 </span>
-                                <span v-if="dat.descripcion" class="text-xs text-gray-500 dark:text-gray-400">
+                                <span v-if="dat.descripcion" class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                     {{ dat.descripcion }}
                                 </span>
                             </div>
@@ -134,16 +110,15 @@ const getImagenUrl = (imagenPath) => {
 
                         <TableTd class="whitespace-nowrap">
                             <div class="flex flex-col">
-                                <span class="font-medium text-gray-900 dark:text-white">
-                                    {{ formatFecha(dat.fecha) }}
-                                </span>
                                 <span class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ formatHora(dat.hora_inicio) }}
+                                    {{ dat.lugar || '-' }}
                                 </span>
                             </div>
                         </TableTd>
 
-                        <TableTd :contend="dat.region || '-'" class="whitespace-nowrap" />
+                        <TableTd class="max-w-[150px]">
+                            <span class="truncate block">{{ dat.region || '-' }}</span>
+                        </TableTd>
 
                         <TableTd class="text-center">
                             <span class="font-semibold text-gray-900 dark:text-white">

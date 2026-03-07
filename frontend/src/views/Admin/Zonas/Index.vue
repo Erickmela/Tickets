@@ -24,7 +24,7 @@ const authStore = useAuthStore();
 const eventosStore = useEventosStore();
 
 // Leer el slug del evento desde los parámetros de la ruta
-const eventoId = computed(() => route.params.slug);
+const eventoId = computed(() => route.params.nombre);
 const evento = ref(null);
 
 const itemsxPage = ref(10);
@@ -60,12 +60,18 @@ const fetchDatos = async (p = form.value.page) => {
     form.value.page = p;
     if (StateSkeleton.value) return;
 
+    // Verificar que el evento esté cargado
+    if (!evento.value || !evento.value.id) {
+        toastGlobalHelper.error('Evento no cargado');
+        return;
+    }
+
     try {
         StateSkeleton.value = true;
         datos.value = [];
 
         const response = await eventosStore.fetchZonasByEvento(
-            eventoId.value,
+            evento.value.id,  // Usar el ID del evento en lugar del nombre
             form.value.page,
             form.value.filterItemsPage,
             form.value.filterSearch
@@ -216,10 +222,10 @@ const volverAEventos = () => {
             <Paginate :pagination="paginate" :skeleton="StateSkeleton" @page-changed="fetchDatos" />
         </Table>
 
-        <ModalAgregar :show="stateModalCrear" :evento-id="eventoId" @data_created="fetchDatos"
+        <ModalAgregar :show="stateModalCrear" :evento="evento" @data_created="fetchDatos"
             @close="closeModalCrear" />
 
-        <ModalEditar :show="stateModalEditar" :data="itemSelected" :evento-id="eventoId" @data_updated="fetchDatos"
+        <ModalEditar :show="stateModalEditar" :data="itemSelected" :evento="evento" @data_updated="fetchDatos"
             @close="closeModalEditar" />
 
         <ModalEliminar :show="stateModalEliminar" :data="itemSelected" @data_destroyed="fetchDatos"

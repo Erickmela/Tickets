@@ -22,8 +22,8 @@ export const eventosService = {
   /**
    * Obtener un evento específico
    */
-  async getEvento(slug) {
-    const response = await api.get(`/eventos/eventos/${slug}/`)
+  async getEvento(nombre) {
+    const response = await api.get(`/eventos/eventos/${nombre}/`)
     return response.data
   },
 
@@ -38,16 +38,16 @@ export const eventosService = {
   /**
    * Actualizar un evento
    */
-  async updateEvento(slug, eventoData) {
-    const response = await api.put(`/eventos/eventos/${slug}/`, eventoData)
+  async updateEvento(nombre, eventoData) {
+    const response = await api.put(`/eventos/eventos/${nombre}/`, eventoData)
     return response.data
   },
 
   /**
    * Eliminar un evento
    */
-  async deleteEvento(slug) {
-    const response = await api.delete(`/eventos/eventos/${slug}/`)
+  async deleteEvento(nombre) {
+    const response = await api.delete(`/eventos/eventos/${nombre}/`)
     return response.data
   },
 
@@ -80,8 +80,8 @@ export const eventosService = {
   /**
    * Obtener estadísticas de un evento
    */
-  async getEstadisticasEvento(eventoSlug) {
-    const response = await api.get(`/eventos/eventos/${eventoSlug}/estadisticas/`)
+  async getEstadisticasEvento(eventoNombre) {
+    const response = await api.get(`/eventos/eventos/${eventoNombre}/estadisticas/`)
     return response.data
   },
 
