@@ -87,7 +87,27 @@ class Venta(models.Model):
         verbose_name='Cliente que Paga'
     )
     fecha_venta = models.DateTimeField('Fecha de Venta', auto_now_add=True)
-    total_pagado = models.DecimalField('Total Pagado', max_digits=10, decimal_places=2)
+    
+    # Montos desglosados
+    subtotal = models.DecimalField(
+        'Subtotal',
+        max_digits=10,
+        decimal_places=2,
+        help_text='Suma de los precios de los tickets'
+    )
+    comision = models.DecimalField(
+        'Comisión de Servicio',
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        help_text='Monto de comisión cobrada (puede ser 0 si está incluida en precio)'
+    )
+    total_pagado = models.DecimalField(
+        'Total Pagado',
+        max_digits=10,
+        decimal_places=2,
+        help_text='Total cobrado al cliente (subtotal + comisión)'
+    )
     metodo_pago = models.CharField(
         'Método de Pago',
         max_length=20,

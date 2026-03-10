@@ -236,6 +236,114 @@ class EventoViewSet(viewsets.ModelViewSet):
             'total_tickets': len(tickets_data)
         })
     
+    @action(detail=True, methods=['get'], url_path='validadores')
+    def validadores(self, request, nombre=None):
+        """Obtener lista de validadores asignados a este evento"""
+        evento = self.get_object()
+        
+        from apps.usuarios.models import Usuario, RolUsuario, ValidadorEvento
+        
+        # Obtener todas las asignaciones de validadores a este evento (activas e inactivas)
+        asignaciones = ValidadorEvento.objects.filter(
+            evento=evento,
+            usuario__rol=RolUsuario.VALIDADOR,
+            usuario__is_active=True
+        ).select_related('usuario', 'usuario__perfil_cliente')
+        
+        validadores_data = []
+        for asignacion in asignaciones:
+            validador = asignacion.usuario
+            try:
+                nombre = validador.perfil_cliente.nombre_completo if hasattr(validador, 'perfil_cliente') else validador.username
+            except:
+                nombre = validador.username
+                
+            validadores_data.append({
+                'id': validador.id,
+                'username': validador.username,
+                'nombre_completo': nombre,
+                'email': validador.email,
+                'fecha_asignacion': asignacion.fecha_asignacion.isoformat() if asignacion.fecha_asignacion else None,
+                'activo': asignacion.activo,
+                'total_validaciones': validador.validaciones_realizadas.filter(
+                    ticket__zona__presentacion__evento=evento
+                ).count()
+            })
+        
+        return Response({
+            'evento': {
+                'id': evento.id,
+                'nombre': evento.nombre
+            },
+            'validadores': validadores_data,
+            'total': len(validadores_data)
+        })
+    
+    @action(detail=True, methods=['post'], url_path='asignar-validadores')
+    def asignar_validadores(self, request, nombre=None):
+        """Asignar uno o más validadores al evento"""
+        evento = self.get_object()
+        validadores_ids = request.data.get('validadores', [])
+        
+        if not validadores_ids:
+            return Response(
+                {'error': 'Debe proporcionar al menos un validador'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        from apps.usuarios.models import Usuario, RolUsuario
+        
+        # Verificar que los usuarios existen y son validadores
+        validadores = Usuario.objects.filter(
+            id__in=validadores_ids,
+            rol=RolUsuario.VALIDADOR,
+            is_active=True
+        )
+        
+        if validadores.count() != len(validadores_ids):
+            return Response(
+                {'error': 'Algunos IDs no corresponden a validadores válidos'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Asignar validadores al evento usando ManyToMany
+        for validador in validadores:
+            validador.eventos_asignados.add(evento)
+        
+        return Response({
+            'success': True,
+            'message': f'{validadores.count()} validador(es) asignado(s) correctamente al evento {evento.nombre}',
+            'total_asignados': evento.validadores_asignados.count()
+        })
+    
+    @action(detail=True, methods=['delete'], url_path='validadores/(?P<validador_id>\\d+)')
+    def remover_validador(self, request, nombre=None, validador_id=None):
+        """Remover un validador del evento"""
+        evento = self.get_object()
+        
+        from apps.usuarios.models import Usuario
+        
+        try:
+            validador = Usuario.objects.get(id=validador_id)
+            
+            # Verificar que el validador está asignado
+            if evento in validador.eventos_asignados.all():
+                validador.eventos_asignados.remove(evento)
+                return Response({
+                    'success': True,
+                    'message': f'Validador {validador.username} removido del evento'
+                })
+            else:
+                return Response(
+                    {'error': 'El validador no está asignado a este evento'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Usuario.DoesNotExist:
+            return Response(
+                {'error': 'Validador no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
     # Métodos privados auxiliares
     
     def _calcular_ventas_por_metodo(self, ventas_evento):

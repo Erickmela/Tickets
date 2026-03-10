@@ -12,7 +12,8 @@ import InputText from '@/components/Inputs/InputText.vue';
 import InputError from '@/components/Inputs/InputError.vue'; 
 import ImageUpload from '@/components/Inputs/ImageUpload.vue'; 
 import Loading from '@/components/Loading.vue';
-import { ArrowLeft, Calendar, Image, MapPin } from 'lucide-vue-next';
+import ValidadoresEvento from './Partes/ValidadoresEvento.vue';
+import { ArrowLeft, Calendar, Image, MapPin, UserCheck } from 'lucide-vue-next';
 
 const router = useRouter();
 const route = useRoute();
@@ -47,7 +48,9 @@ const formBasico = ref({
     categoria: null, // Ahora es el ID de la categoría
     lugar: '',
     region: 'Lima',
-    estado: '1'
+    estado: '1',
+    comision_porcentaje: 0.00,
+    comision_incluida_precio: false
 });
 
 const formPresentaciones = ref({
@@ -71,7 +74,7 @@ const imagenesExistentes = ref({
     imagen_mapa_zonas: null
 });
 
-const steps = ['Información Básica', 'Presentaciones', 'Imágenes', 'Zonas'];
+const steps = ['Información Básica', 'Presentaciones', 'Imágenes', 'Zonas', 'Validadores'];
 
 // Cargar categorías desde el API
 const cargarCategorias = async () => {
@@ -103,7 +106,9 @@ const cargarEvento = async () => {
             categoria: evento.categoria || null,
             lugar: evento.lugar || '',
             region: evento.region || 'Lima',
-            estado: evento.estado || '1'
+            estado: evento.estado || '1',
+            comision_porcentaje: evento.comision_porcentaje || 0.00,
+            comision_incluida_precio: evento.comision_incluida_precio || false
         };
 
         // Cargar presentaciones con sus zonas
@@ -251,6 +256,8 @@ const handleFinish = async () => {
         formData.append('lugar', formBasico.value.lugar);
         formData.append('region', formBasico.value.region);
         formData.append('estado', formBasico.value.estado);
+        formData.append('comision_porcentaje', formBasico.value.comision_porcentaje || 0);
+        formData.append('comision_incluida_precio', formBasico.value.comision_incluida_precio ? 'true' : 'false');
 
         // Imágenes (solo las nuevas)
         Object.keys(formImagenes.value).forEach(key => {
@@ -280,6 +287,15 @@ const handleFinish = async () => {
     } finally {
         isSubmitting.value = false;
     }
+};
+
+// Handlers para validadores
+const handleValidadoresUpdate = (message) => {
+    toastHelper.success(message);
+};
+
+const handleValidadoresError = (message) => {
+    toastHelper.error(message);
 };
 
 const volver = () => {
@@ -370,6 +386,37 @@ const volver = () => {
                                 <option value="2">Activo</option>
                                 <option value="3">Finalizado</option>
                             </select>
+                        </div>
+
+                        <!-- Comisión -->
+                        <div class="col-span-2 border-t pt-6 mt-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Configuración Comercial</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <InputLabel for="comision_porcentaje" value="Comisión de Servicio (%)" />
+                                    <InputText id="comision_porcentaje" v-model.number="formBasico.comision_porcentaje" 
+                                        type="number" min="0" max="100" step="0.01"
+                                        placeholder="Ingrese decimal: 8.00, 10.50, etc." />
+                                    <p class="mt-1 text-xs text-gray-500">Porcentaje acordado (acepta decimales: 8.00, 10.50, 15.75, etc.)</p>
+                                </div>
+
+                                <div class="flex items-center pt-6">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="checkbox" v-model="formBasico.comision_incluida_precio"
+                                            class="h-4 w-4 text-[#B3224D] focus:ring-[#B3224D] border-gray-300 rounded" />
+                                        <span class="ml-2 text-sm text-gray-900">Comisión incluida en precio</span>
+                                    </label>
+                                    <div class="ml-2 relative group">
+                                        <svg class="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                        </svg>
+                                        <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                                            <strong>Marcado:</strong> Organizador asume la comisión (ya está en el precio).<br>
+                                            <strong>Desmarcado:</strong> Se cobra al usuario como "Comisión de servicio".
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -603,6 +650,28 @@ const volver = () => {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </template>
+
+                <!-- Step 4: Validadores -->
+                <template #step-4>
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <UserCheck class="w-6 h-6 text-[#B3224D]" />
+                            <h2 class="text-2xl font-bold text-gray-900">Validadores del Evento</h2>
+                        </div>
+
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                            <p class="text-sm text-blue-800 dark:text-blue-300">
+                                <span class="font-semibold">Seguridad:</span> Solo los validadores asignados a este evento podrán escanear las entradas. Esto previene que validadores de otros eventos puedan acceder.
+                            </p>
+                        </div>
+
+                        <ValidadoresEvento 
+                            :evento-id="eventoId" 
+                            @update="handleValidadoresUpdate"
+                            @error="handleValidadoresError"
+                        />
                     </div>
                 </template>
             </VerticalSteeper>

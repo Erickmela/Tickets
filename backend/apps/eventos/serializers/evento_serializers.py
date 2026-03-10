@@ -26,9 +26,10 @@ class EventoSerializer(serializers.ModelSerializer):
         model = Evento
         fields = [
             'id', 'encoded_id', 'nombre', 'descripcion', 'categoria', 'categoria_nombre',
-            'lugar', 'region', 'estado', 'activo', 'imagen_principal', 'imagen_flyer',
-            'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas', 'zonas', 'presentaciones',
-            'total_zonas', 'capacidad_total', 'tickets_vendidos', 'disponibilidad', 'fecha_creacion'
+            'lugar', 'region', 'estado', 'activo', 'comision_porcentaje', 'comision_incluida_precio',
+            'imagen_principal', 'imagen_flyer', 'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas',
+            'zonas', 'presentaciones', 'total_zonas', 'capacidad_total', 'tickets_vendidos',
+            'disponibilidad', 'fecha_creacion'
         ]
         read_only_fields = ['fecha_creacion', 'encoded_id', 'categoria_nombre']
     
@@ -58,8 +59,8 @@ class EventoListSerializer(serializers.ModelSerializer):
         model = Evento
         fields = [
             'id', 'encoded_id', 'nombre', 'descripcion', 'categoria', 'categoria_nombre',
-            'lugar', 'region', 'estado', 'activo', 'imagen_principal', 'imagen_flyer', 
-            'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas',
+            'lugar', 'region', 'estado', 'activo', 'comision_porcentaje', 'comision_incluida_precio',
+            'imagen_principal', 'imagen_flyer', 'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas',
             'total_zonas', 'capacidad_total', 'tickets_vendidos'
         ]
     
@@ -130,8 +131,8 @@ class EventoCreateSerializer(serializers.ModelSerializer):
         model = Evento
         fields = [
             'nombre', 'descripcion', 'categoria', 'lugar', 
-            'region', 'estado', 'activo', 'imagen_principal', 'imagen_flyer', 
-            'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas', 
+            'region', 'estado', 'activo', 'comision_porcentaje', 'comision_incluida_precio',
+            'imagen_principal', 'imagen_flyer', 'imagen_banner', 'imagen_cartel', 'imagen_mapa_zonas', 
             'presentaciones_data', 'fecha', 'hora_inicio', 'zonas_data'
         ]
     

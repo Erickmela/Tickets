@@ -41,7 +41,9 @@ const formBasico = ref({
     categoria: null, // Ahora es el ID de la categoría
     lugar: '',
     region: 'Lima',
-    estado: '1' // Por defecto: Próximo
+    estado: '1', // Por defecto: Próximo
+    comision_porcentaje: 0.00,
+    comision_incluida_precio: false
 });
 
 const formPresentaciones = ref({
@@ -189,6 +191,8 @@ const handleFinish = async () => {
         formData.append('lugar', formBasico.value.lugar);
         formData.append('region', formBasico.value.region);
         formData.append('estado', formBasico.value.estado);
+        formData.append('comision_porcentaje', formBasico.value.comision_porcentaje || 0);
+        formData.append('comision_incluida_precio', formBasico.value.comision_incluida_precio ? 'true' : 'false');
 
         // Imágenes (solo si son Files válidos)
         Object.keys(formImagenes.value).forEach(key => {
@@ -306,6 +310,37 @@ const volver = () => {
                                 <option value="2">Activo</option>
                                 <option value="3">Finalizado</option>
                             </select>
+                        </div>
+
+                        <!-- Comisión -->
+                        <div class="col-span-2 border-t pt-6 mt-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Configuración Comercial</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <InputLabel for="comision_porcentaje" value="Comisión de Servicio (%)" />
+                                    <InputText id="comision_porcentaje" v-model.number="formBasico.comision_porcentaje" 
+                                        type="number" min="0" max="100" step="0.01"
+                                        placeholder="Ingrese decimal: 8.00, 10.50, etc." />
+                                    <p class="mt-1 text-xs text-gray-500">Porcentaje acordado (acepta decimales: 8.00, 10.50, 15.75, etc.)</p>
+                                </div>
+
+                                <div class="flex items-center pt-6">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="checkbox" v-model="formBasico.comision_incluida_precio"
+                                            class="h-4 w-4 text-[#B3224D] focus:ring-[#B3224D] border-gray-300 rounded" />
+                                        <span class="ml-2 text-sm text-gray-900">Comisión incluida en precio</span>
+                                    </label>
+                                    <div class="ml-2 relative group">
+                                        <svg class="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                        </svg>
+                                        <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                                            <strong>Marcado:</strong> Organizador asume la comisión (ya está en el precio).<br>
+                                            <strong>Desmarcado:</strong> Se cobra al usuario como "Comisión de servicio".
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </template>

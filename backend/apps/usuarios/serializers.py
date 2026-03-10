@@ -353,3 +353,85 @@ class PerfilClienteSerializer(serializers.ModelSerializer):
         representation['total_tickets'] = instance.total_tickets()
         return representation
 
+
+class AsignarEventosValidadorSerializer(serializers.Serializer):
+    """
+    Serializer para asignar/desasignar eventos a validadores
+    Solo ADMIN puede usar este serializer
+    """
+    validador_id = serializers.IntegerField(
+        help_text='ID del usuario validador'
+    )
+    eventos_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text='Lista de IDs de eventos a asignar (reemplaza la asignación actual)'
+    )
+    
+    def validate_validador_id(self, value):
+        """Verificar que el usuario existe y es validador"""
+        try:
+            usuario = Usuario.objects.get(id=value)
+            if usuario.rol not in [RolUsuario.VALIDADOR, RolUsuario.ADMIN]:
+                raise serializers.ValidationError(
+                    f'El usuario debe tener rol VALIDADOR o ADMIN, pero tiene rol {usuario.get_rol_display()}'
+                )
+            return value
+        except Usuario.DoesNotExist:
+            raise serializers.ValidationError('Usuario no encontrado')
+    
+    def validate_eventos_ids(self, value):
+        """Verificar que los eventos existen"""
+        from apps.eventos.models import Evento
+        eventos_existentes = Evento.objects.filter(id__in=value).count()
+        if eventos_existentes != len(value):
+            raise serializers.ValidationError('Uno o más eventos no existen')
+        return value
+    
+    @transaction.atomic
+    def save(self):
+        """Asignar eventos al validador"""
+        from apps.eventos.models import Evento
+        
+        validador = Usuario.objects.get(id=self.validated_data['validador_id'])
+        eventos = Evento.objects.filter(id__in=self.validated_data['eventos_ids'])
+        
+        # Reemplazar asignación actual con la nueva
+        validador.eventos_asignados.set(eventos)
+        
+        return validador
+
+
+class ValidadorConEventosSerializer(serializers.ModelSerializer):
+    """Serializer para listar validadores con sus eventos asignados"""
+    nombre_completo = serializers.SerializerMethodField()
+    eventos_asignados = serializers.SerializerMethodField()
+    total_validaciones = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Usuario
+        fields = ['id', 'username', 'email', 'nombre_completo', 'rol', 
+                  'eventos_asignados', 'total_validaciones', 'is_active']
+    
+    def get_nombre_completo(self, obj):
+        """Obtener nombre completo del perfil"""
+        try:
+            return obj.perfil_cliente.nombre_completo if hasattr(obj, 'perfil_cliente') else obj.username
+        except:
+            return obj.username
+    
+    def get_eventos_asignados(self, obj):
+        """Listar eventos asignados"""
+        return [
+            {
+                'id': e.id,
+                'nombre': e.nombre,
+                'activo': e.activo,
+                'lugar': e.lugar
+            }
+            for e in obj.eventos_asignados.all()
+        ]
+    
+    def get_total_validaciones(self, obj):
+        """Total de validaciones realizadas"""
+        return obj.validaciones_realizadas.count()
+

@@ -305,8 +305,28 @@ const subtotal = computed(() => {
 });
 
 const cargoServicio = computed(() => {
-    // 5% de cargo por servicio
-    return subtotal.value * 0.05;
+    // Calcular comisión por cada ticket individual
+    let comisionTotal = 0;
+    
+    items.value.forEach(item => {
+        // Si la comisión está incluida en el precio, no se cobra aparte
+        if (item.comision_incluida_precio) {
+            return; // No sumar comisión
+        }
+        
+        // Calcular comisión de cada ticket de este item
+        item.zonas.forEach(zona => {
+            const precioTicket = zona.precio;
+            const cantidadTickets = zona.cantidad;
+            const porcentaje = item.comision_porcentaje || 0;
+            
+            // Comisión por cada ticket: precio × porcentaje
+            const comisionPorTicket = precioTicket * (porcentaje / 100);
+            comisionTotal += comisionPorTicket * cantidadTickets;
+        });
+    });
+    
+    return comisionTotal;
 });
 
 const total = computed(() => {

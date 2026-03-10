@@ -28,12 +28,12 @@ class VentaSerializer(serializers.ModelSerializer):
         model = Venta
         fields = [
             'id', 'codigo_venta', 'vendedor', 'vendedor_nombre', 'vendedor_email',
-            'cliente_pagador', 'fecha_venta', 'total_pagado', 
+            'cliente_pagador', 'fecha_venta', 'subtotal', 'comision', 'total_pagado', 
             'metodo_pago', 'metodo_pago_display', 'nro_operacion',
             'observaciones', 'activo', 'orden_id', 'tickets', 
             'cantidad_tickets', 'tickets_activos', 'puede_anularse'
         ]
-        read_only_fields = ['id', 'codigo_venta', 'fecha_venta']
+        read_only_fields = ['id', 'codigo_venta', 'fecha_venta', 'subtotal', 'comision']
     
     def get_cantidad_tickets(self, obj):
         """Contar cantidad total de tickets de la venta"""
@@ -64,7 +64,7 @@ class VentaListSerializer(serializers.ModelSerializer):
         model = Venta
         fields = [
             'id', 'codigo_venta', 'cliente_nombre', 'cliente_dni', 'vendedor_nombre', 
-            'total_pagado', 'metodo_pago', 'metodo_pago_display',
+            'subtotal', 'comision', 'total_pagado', 'metodo_pago', 'metodo_pago_display',
             'cantidad_tickets', 'tickets_activos', 'fecha_venta', 'activo'
         ]
         read_only_fields = fields
@@ -95,7 +95,7 @@ class VentaDetailSerializer(serializers.ModelSerializer):
         model = Venta
         fields = [
             'id', 'vendedor_info', 'cliente_pagador', 'fecha_venta', 
-            'total_pagado', 'metodo_pago', 'metodo_pago_display',
+            'subtotal', 'comision', 'total_pagado', 'metodo_pago', 'metodo_pago_display',
             'nro_operacion', 'observaciones', 'activo', 'orden_info',
             'tickets', 'estadisticas', 'puede_anularse'
         ]

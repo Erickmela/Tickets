@@ -14,7 +14,8 @@ from .models import Usuario, PerfilCliente, RolUsuario
 from .serializers import (
     UsuarioConPerfilSerializer, TrabajadorCreateSerializer, TrabajadorUpdateSerializer,
     ClienteCreateSerializer, ClienteUpdateSerializer,
-    UsuarioLoginSerializer, PerfilClienteSerializer
+    UsuarioLoginSerializer, PerfilClienteSerializer,
+    AsignarEventosValidadorSerializer, ValidadorConEventosSerializer
 )
 
 
@@ -96,6 +97,91 @@ class TrabajadorViewSet(viewsets.ModelViewSet):
         """Obtener información del usuario actual"""
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='validadores')
+    def listar_validadores(self, request):
+        """
+        Listar todos los validadores con sus eventos asignados
+        Solo ADMIN puede acceder
+        """
+        if request.user.rol != RolUsuario.ADMIN:
+            return Response(
+                {'error': 'Solo administradores pueden ver esta información'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        from .serializers import ValidadorConEventosSerializer
+        validadores = Usuario.objects.filter(
+            rol__in=[RolUsuario.VALIDADOR, RolUsuario.ADMIN]
+        ).prefetch_related('eventos_asignados', 'validaciones_realizadas')
+        
+        serializer = ValidadorConEventosSerializer(validadores, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'], url_path='asignar-eventos')
+    def asignar_eventos(self, request, pk=None):
+        """
+        Asignar eventos a un validador
+        Solo ADMIN puede hacer esta operación
+        
+        Body: { "eventos_ids": [1, 2, 3] }
+        """
+        if request.user.rol != RolUsuario.ADMIN:
+            return Response(
+                {'error': 'Solo administradores pueden asignar eventos'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        from .serializers import AsignarEventosValidadorSerializer
+        validador = self.get_object()
+        
+        # Verificar que es un validador
+        if validador.rol not in [RolUsuario.VALIDADOR, RolUsuario.ADMIN]:
+            return Response(
+                {'error': f'El usuario debe ser VALIDADOR o ADMIN, no {validador.get_rol_display()}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        data = {
+            'validador_id': validador.id,
+            'eventos_ids': request.data.get('eventos_ids', [])
+        }
+        
+        serializer = AsignarEventosValidadorSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        # Retornar la información actualizada del validador
+        from .serializers import ValidadorConEventosSerializer
+        output_serializer = ValidadorConEventosSerializer(validador)
+        return Response({
+            'message': 'Eventos asignados correctamente',
+            'data': output_serializer.data
+        })
+    
+    @action(detail=True, methods=['get'], url_path='eventos-asignados')
+    def obtener_eventos_asignados(self, request, pk=None):
+        """
+        Obtener los eventos asignados a un validador
+        El validador puede ver sus propios eventos, el admin todos
+        """
+        validador = self.get_object()
+        
+        # Solo el mismo validador o un admin puede ver esto
+        if request.user.id != validador.id and request.user.rol != RolUsuario.ADMIN:
+            return Response(
+                {'error': 'No tienes permiso para ver esta información'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        from apps.eventos.serializers import EventoListSerializer
+        eventos = validador.eventos_asignados.all()
+        serializer = EventoListSerializer(eventos, many=True)
+        
+        return Response({
+            'validador': validador.username,
+            'eventos_asignados': serializer.data
+        })
 
 
 class ClienteViewSet(viewsets.ModelViewSet):

@@ -4,6 +4,7 @@ Modelos de Usuario
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.core.validators import RegexValidator
+from django.utils import timezone
 
 
 class RolUsuario(models.TextChoices):
@@ -63,6 +64,16 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         default=RolUsuario.VENDEDOR
     )
     
+    # Asignación de eventos para validadores
+    eventos_asignados = models.ManyToManyField(
+        'eventos.Evento',
+        through='ValidadorEvento',
+        blank=True,
+        related_name='validadores_asignados',
+        verbose_name='Eventos Asignados',
+        help_text='Eventos en los que este validador puede escanear tickets. Solo aplica para rol VALIDADOR.'
+    )
+    
     is_active = models.BooleanField('Activo', default=True)
     is_staff = models.BooleanField('Staff', default=False)
     fecha_creacion = models.DateTimeField('Fecha de Creación', auto_now_add=True)
@@ -83,6 +94,13 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
             return f'{self.perfil_cliente.nombre_completo} ({self.username})'
         return f'{self.username}'
     
+    @property
+    def nombre_completo(self):
+        """Retorna el nombre completo del usuario (de perfil_cliente o username)"""
+        if hasattr(self, 'perfil_cliente') and self.perfil_cliente:
+            return self.perfil_cliente.nombre_completo
+        return self.username
+    
     def tiene_permiso(self, permiso: str) -> bool:
         """Verifica permisos según rol - Dependency Inversion"""
         permisos_rol = {
@@ -92,6 +110,66 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
             RolUsuario.CLIENTE: ['ver_mis_tickets', 'comprar_tickets'],
         }
         return permiso in permisos_rol.get(self.rol, [])
+    
+    def puede_validar_evento(self, evento) -> bool:
+        """
+        Verifica si este validador puede escanear tickets del evento especificado
+        
+        REGLA DE SEGURIDAD:
+        - ADMIN: Puede validar en cualquier evento
+        - VALIDADOR: Solo si está asignado explícitamente al evento
+        - Otros roles: No pueden validar
+        """
+        if self.rol == RolUsuario.ADMIN:
+            return True
+        
+        if self.rol == RolUsuario.VALIDADOR:
+            return self.eventos_asignados.filter(id=evento.id).exists()
+        
+        return False
+    
+    def eventos_disponibles_para_validacion(self):
+        """Retorna los eventos en los que este usuario puede validar"""
+        if self.rol == RolUsuario.ADMIN:
+            from apps.eventos.models import Evento
+            return Evento.objects.filter(activo=True)
+        elif self.rol == RolUsuario.VALIDADOR:
+            return self.eventos_asignados.filter(activo=True)
+        return []
+
+
+class ValidadorEvento(models.Model):
+    """Tabla intermedia para asignación de validadores a eventos"""
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='asignaciones_evento'
+    )
+    evento = models.ForeignKey(
+        'eventos.Evento',
+        on_delete=models.CASCADE,
+        related_name='asignaciones_validador'
+    )
+    fecha_asignacion = models.DateTimeField(
+        'Fecha de Asignación',
+        auto_now_add=True,
+        help_text='Fecha en que se asignó este validador al evento'
+    )
+    activo = models.BooleanField(
+        'Activo',
+        default=True,
+        help_text='Si la asignación está activa. Se desactiva automáticamente cuando el evento se desactiva'
+    )
+    
+    class Meta:
+        db_table = 'usuarios_usuario_eventos_asignados'
+        verbose_name = 'Asignación Validador-Evento'
+        verbose_name_plural = 'Asignaciones Validador-Evento'
+        unique_together = [('usuario', 'evento')]
+        ordering = ['-fecha_asignacion']
+    
+    def __str__(self):
+        return f'{self.usuario.nombre_completo} → {self.evento.nombre}'
 
 
 class PerfilCliente(models.Model):

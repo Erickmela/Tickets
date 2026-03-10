@@ -62,6 +62,8 @@ export function addToCart(evento, presentacion, zonasSeleccionadas) {
             eventoId: evento.id,
             eventoNombre: evento.nombre,
             eventoImagen: evento.imagen_principal,
+            comision_porcentaje: evento.comision_porcentaje || 0,
+            comision_incluida_precio: evento.comision_incluida_precio || false,
             presentacionId: presentacion.id,
             presentacionFecha: presentacion.fecha,
             presentacionHora: presentacion.hora_inicio,

@@ -31,6 +31,10 @@ class EventoAdmin(admin.ModelAdmin):
         ('Información del Evento', {
             'fields': ('nombre', 'descripcion', 'categoria', 'lugar', 'region')
         }),
+        ('Configuración Comercial', {
+            'fields': ('comision_porcentaje', 'comision_incluida_precio'),
+            'description': 'Comisión de servicio acordada con el organizador. Si "incluida en precio" está marcado, el organizador asume la comisión y el usuario no la ve.'
+        }),
         ('Imágenes Promocionales', {
             'fields': ('imagen_principal', 'imagen_flyer', 'imagen_banner', 'imagen_cartel'),
             'description': 'Imágenes para promocionar el evento'
@@ -40,7 +44,7 @@ class EventoAdmin(admin.ModelAdmin):
             'description': 'Mapa/plano con la distribución de zonas del local para que los clientes vean dónde compran'
         }),
         ('Estado', {
-            'fields': ('activo',)
+            'fields': ('estado', 'activo',)
         }),
         ('Metadatos', {
             'fields': ('fecha_creacion', 'fecha_actualizacion'),

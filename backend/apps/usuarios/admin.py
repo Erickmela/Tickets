@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Usuario, PerfilCliente
+from .models import Usuario, PerfilCliente, ValidadorEvento
 
 
 @admin.register(Usuario)
@@ -48,3 +48,12 @@ class PerfilClienteAdmin(admin.ModelAdmin):
             return obj.usuario.email
         return '-'
     get_email.short_description = 'Email'
+
+
+@admin.register(ValidadorEvento)
+class ValidadorEventoAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'evento', 'fecha_asignacion', 'activo')
+    list_filter = ('activo', 'fecha_asignacion')
+    search_fields = ('usuario__username', 'usuario__perfil_cliente__nombre_completo', 'evento__nombre')
+    readonly_fields = ('fecha_asignacion',)
+    ordering = ('-fecha_asignacion',)

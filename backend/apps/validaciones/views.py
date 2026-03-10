@@ -143,12 +143,24 @@ class ValidarTicketView(APIView):
                 ).get(codigo_uuid=codigo_qr)
             
             # Verificar que el ticket sea del evento activo
-            if not ticket.zona.evento.activo:
+            if not ticket.zona.presentacion.evento.activo:
                 return Response({
                     'success': False,
                     'error': 'Ticket no válido',
                     'message': 'Este ticket no pertenece al evento activo'
                 }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # SEGURIDAD: Verificar que el validador esté asignado a este evento
+            evento = ticket.zona.presentacion.evento
+            if not request.user.puede_validar_evento(evento):
+                return Response({
+                    'success': False,
+                    'error': 'ACCESO DENEGADO',
+                    'message': f'No tienes autorización para validar tickets del evento "{evento.nombre}"',
+                    'instruccion': 'Contacta al administrador para que te asigne a este evento',
+                    'evento_ticket': evento.nombre,
+                    'tus_eventos': [e.nombre for e in request.user.eventos_disponibles_para_validacion()]
+                }, status=status.HTTP_403_FORBIDDEN)
             
             # Verificar si el ticket ya fue usado
             validacion_previa = Validacion.objects.filter(ticket=ticket).first()

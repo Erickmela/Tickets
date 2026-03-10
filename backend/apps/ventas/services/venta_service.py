@@ -28,14 +28,16 @@ class VentaService:
         # Paso 1: Obtener o crear el cliente (Usuario + PerfilCliente)
         cliente = VentaService._obtener_o_crear_cliente(datos_venta)
         
-        # Paso 2: Calcular el total de la venta
-        total = VentaService._calcular_total(tickets_data)
+        # Paso 2: Calcular montos (subtotal, comisión, total)
+        montos = VentaService._calcular_montos(tickets_data)
         
         # Paso 3: Crear la venta
         venta = Venta.objects.create(
             vendedor=vendedor,
             cliente_pagador=cliente,
-            total_pagado=total,
+            subtotal=montos['subtotal'],
+            comision=montos['comision'],
+            total_pagado=montos['total'],
             metodo_pago=datos_venta['metodo_pago'],
             nro_operacion=datos_venta.get('nro_operacion', ''),
             observaciones=datos_venta.get('observaciones', '')
@@ -149,13 +151,53 @@ class VentaService:
         return cliente
     
     @staticmethod
-    def _calcular_total(tickets_data: list) -> float:
-        """Calcular el total de la venta basado en las zonas de los tickets"""
-        total = 0
+    def _calcular_montos(tickets_data: list) -> dict:
+        """
+        Calcular subtotal, comisión y total basado en los tickets
+        La comisión se calcula por cada entrada individual según la configuración del evento
+        
+        Returns:
+            dict: {
+                'subtotal': Decimal,  # Suma de precios de tickets
+                'comision': Decimal,  # Comisión total (suma de comisiones por ticket)
+                'total': Decimal      # subtotal + comision
+            }
+        """
+        from decimal import Decimal
+        
+        subtotal = Decimal('0.00')
+        comision_total = Decimal('0.00')
+        
+        # Obtener el evento desde el primer ticket (todos deben ser del mismo evento)
+        if not tickets_data:
+            raise ValidationError('Debe incluir al menos un ticket')
+        
+        # Obtener zona y evento del primer ticket
+        primera_zona = Zona.objects.select_related(
+            'presentacion__evento'
+        ).get(id=tickets_data[0]['zona_id'])
+        evento = primera_zona.presentacion.evento
+        
+        # Calcular por cada ticket
         for ticket_data in tickets_data:
             zona = Zona.objects.get(id=ticket_data['zona_id'])
-            total += zona.precio
-        return total
+            precio_ticket = Decimal(str(zona.precio))
+            
+            # Acumular subtotal
+            subtotal += precio_ticket
+            
+            # Calcular comisión de este ticket si no está incluida en el precio
+            if not evento.comision_incluida_precio and evento.comision_porcentaje > 0:
+                comision_ticket = precio_ticket * (Decimal(str(evento.comision_porcentaje)) / Decimal('100'))
+                comision_total += comision_ticket.quantize(Decimal('0.01'))
+        
+        total = subtotal + comision_total
+        
+        return {
+            'subtotal': subtotal,
+            'comision': comision_total,
+            'total': total
+        }
     
     @staticmethod
     def _crear_tickets(venta: Venta, tickets_data: list):

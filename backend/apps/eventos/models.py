@@ -105,6 +105,21 @@ class Evento(models.Model):
     region = models.CharField('Región', max_length=50, choices=REGION_CHOICES, default='Lima', help_text='Región donde se realiza el evento')
     estado = models.CharField('Estado', max_length=20, choices=ESTADO_CHOICES, default='1')
     activo = models.BooleanField('Activo', default=False, help_text='Solo un evento puede estar activo')
+    
+    # Configuración de comisión por servicio
+    comision_porcentaje = models.DecimalField(
+        'Comisión (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0.00,
+        help_text='Porcentaje de comisión acordado con el organizador (ej: 8.00 para 8%)'
+    )
+    comision_incluida_precio = models.BooleanField(
+        'Comisión incluida en precio',
+        default=False,
+        help_text='True: Comisión ya incluida en precio del ticket (organizador asume). False: Se cobra aparte al usuario como "Comisión de servicio"'
+    )
+    
     # Imágenes del evento
     imagen_principal = models.ImageField(
         'Imagen Principal',
@@ -153,14 +168,81 @@ class Evento(models.Model):
     
     def save(self, *args, **kwargs):
         """Establecer activo=True automáticamente si estado es Próximo o Activo"""
+        # Verificar si el estado de activo cambió
+        estado_anterior_activo = None
+        if self.pk:  # Si el evento ya existe en BD
+            try:
+                evento_anterior = Evento.objects.get(pk=self.pk)
+                estado_anterior_activo = evento_anterior.activo
+            except Evento.DoesNotExist:
+                pass
+        
         if self.estado in ['1', '2']:  # '1' = Próximo, '2' = Activo
             self.activo = True
         else:  # '3' = Finalizado
             self.activo = False
+        
         super().save(*args, **kwargs)
+        
+        # Si el evento se desactivó, desactivar todas sus asignaciones de validadores
+        if estado_anterior_activo is not None and estado_anterior_activo == True and self.activo == False:
+            from apps.usuarios.models import ValidadorEvento
+            ValidadorEvento.objects.filter(evento=self, activo=True).update(activo=False)
     
     def __str__(self):
         return f'{self.nombre}'
+    
+    def calcular_comision(self, subtotal):
+        """
+        Calcular el monto de comisión basado en un subtotal
+        
+        Args:
+            subtotal (Decimal): Monto base (suma de precios de tickets)
+            
+        Returns:
+            Decimal: Monto de comisión a cobrar (0 si está incluida en precio)
+        """
+        from decimal import Decimal
+        
+        if self.comision_incluida_precio:
+            # Si la comisión ya está incluida en el precio, no se cobra aparte
+            return Decimal('0.00')
+        
+        # Calcular comisión: subtotal * (porcentaje / 100)
+        comision = subtotal * (self.comision_porcentaje / Decimal('100'))
+        return comision.quantize(Decimal('0.01'))
+    
+    def calcular_total_con_comision(self, subtotal):
+        """
+        Calcular el total a cobrar al usuario (subtotal + comisión si aplica)
+        
+        Args:
+            subtotal (Decimal): Monto base (suma de precios de tickets)
+            
+        Returns:
+            Decimal: Total a cobrar al usuario
+        """
+        return subtotal + self.calcular_comision(subtotal)
+    
+    def obtener_comision_real(self, subtotal):
+        """
+        Obtener la comisión real que recibe el sistema (para reportes)
+        Útil cuando la comisión está incluida en el precio
+        
+        Args:
+            subtotal (Decimal): Monto total de la venta
+            
+        Returns:
+            Decimal: Monto de comisión que corresponde al sistema
+        """
+        from decimal import Decimal
+        
+        if self.comision_porcentaje == 0:
+            return Decimal('0.00')
+        
+        # Siempre calcular la comisión sobre el monto, sin importar si está incluida
+        comision = subtotal * (self.comision_porcentaje / Decimal('100'))
+        return comision.quantize(Decimal('0.01'))
     
     def total_presentaciones(self):
         """Retornar el número total de presentaciones del evento"""

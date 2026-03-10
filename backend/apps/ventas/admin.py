@@ -12,19 +12,23 @@ class TicketInline(admin.TabularInline):
 
 @admin.register(Venta)
 class VentaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'cliente_pagador', 'vendedor', 'total_pagado', 'metodo_pago', 'cantidad_tickets', 'fecha_venta')
+    list_display = ('id', 'cliente_pagador', 'vendedor', 'subtotal', 'comision', 'total_pagado', 'metodo_pago', 'cantidad_tickets', 'fecha_venta')
     list_filter = ('metodo_pago', 'fecha_venta', 'vendedor')
     search_fields = ('cliente_pagador__nombre_completo', 'cliente_pagador__dni', 'nro_operacion')
     ordering = ('-fecha_venta',)
     inlines = [TicketInline]
-    readonly_fields = ('fecha_venta',)
+    readonly_fields = ('fecha_venta', 'subtotal', 'comision')
     
     fieldsets = (
         ('Información de la Venta', {
             'fields': ('vendedor', 'cliente_pagador', 'fecha_venta')
         }),
+        ('Montos', {
+            'fields': ('subtotal', 'comision', 'total_pagado'),
+            'description': 'Subtotal = suma de tickets | Comisión = por cada entrada según evento | Total = subtotal + comisión'
+        }),
         ('Pago', {
-            'fields': ('total_pagado', 'metodo_pago', 'nro_operacion')
+            'fields': ('metodo_pago', 'nro_operacion')
         }),
         ('Información Adicional', {
             'fields': ('observaciones', 'activo'),
